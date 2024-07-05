@@ -1,0 +1,97 @@
+{% extends 'factures/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="columns is-centered has-text-centered">
+    <div class="column is-half">
+        <div class="card has-background-white-ter">
+            <h1 class="title is-3">Invoices</h1>
+        </div>
+    </div>
+</div>
+
+<form action="{% url 'factures:invoice-list' %}" method="post">{% csrf_token %}
+    <div class="card">
+        <header class="card-header">
+            <p class="card-header-title">
+                All Orders / Change Order Status &nbsp;<button class="button is-rounded is-info">
+                    <a href="{% url 'factures:invoice-create' %}" class="has-text-white">Create Invoice</a></button>
+            </p>
+        </header>
+        <div class="card-content">
+            <div class="content">
+                <table class="table is-fullwidth is-bordered is-hoverable is-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>FACTURE</th>
+                            <th>CLIENT</th>
+                            <th>DATE</th>
+                            <th>DUE DATE</th>
+                            <th>SUBTOTAL</th>
+                            <th>TAX</th>
+                            <th>TOTAL</th>
+                            <th>STATUS</th>
+                            <th>STATS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                        <tr>
+                            <td><input class="checkbox" type="checkbox" value="{{ invoice.id }}" name="invoice_id" size="1" /></td>
+                            <td width="1%">
+                                <a href="{% url 'factures:invoice-edit' invoice.id %}">#{{ invoice.invoice_number }}</a>
+                            </td>
+                            <td width="9%">{{ invoice.customer }}</td>
+                            <td>{{ invoice.date }}</td>
+                            <td>
+                                {% if invoice.days_remaining > 0 %}
+                                    Dans {{ invoice.days_remaining }} jours
+                                {% elif invoice.days_remaining == 0 %}
+                                    Today
+                                {% else %}
+                                    Overdue by {{ invoice.days_remaining|abs }} days
+                                {% endif %}
+                            </td>
+                            <td>{{ invoice.subtotal }}</td>
+                            <td>{{ invoice.tax }}</td>
+                            <td>{{ invoice.total_amount }}</td>
+                            <td class="level-right">
+                                {% if invoice.get_status %}
+                                <a class="button is-small is-success" href="#">Paid</a>
+                                {% else %}
+                                <a class="button is-small is-warning" href="#">Not Paid</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{% url 'factures:invoice-list' %}" method="post">{% csrf_token %}
+                                    <input type="hidden" name="invoice_id" value="{{ invoice.id }}">
+                                    <select name="draft" onchange="this.form.submit()">
+                                        <option value="1" {% if invoice.draft %}selected{% endif %}>Brouillon</option>
+                                        <option value="0" {% if not invoice.draft %}selected{% endif %}>Comptabilisé</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div><br /><br /><br />
+    <div class="card has-background-white-ter">
+        <header class="card-header">
+            <p class="card-header-title">Change Order Status</p>
+        </header>
+        <div class="card-content">
+            <div class="select is-rounded">
+                <select id="status" name="status">
+                    <option value="1">Paid</option>
+                    <option value="0">Not Paid</option>
+                </select>
+            </div>
+            <input class="button is-info is-rounded" type="submit" value="Change Status" name="mybtn">
+        </div>
+    </div>
+</form>
+{% endblock %}
