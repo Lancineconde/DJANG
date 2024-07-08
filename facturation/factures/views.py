@@ -1,12 +1,10 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404, reverse
-from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views import View
 from .models import LineItem, Invoice
 from .forms import LineItemFormset, InvoiceForm
-
 import pdfkit
 
 class InvoiceListView(View):
@@ -91,20 +89,23 @@ def create_or_edit_invoice(request, id=None):
             invoice.total_amount = total_with_tax
             invoice.save()
 
-            return redirect('factures:invoice-list')
+            return redirect(reverse('factures:invoice-list'))
         else:
             print("Form or formset is invalid")
             print(f"Form errors: {form.errors}")
             print(f"Formset errors: {formset.errors}")
+
+        return redirect(reverse('factures:invoice-list'))
+
     else:
         form = InvoiceForm(instance=invoice)
-        formset = LineItemFormset(queryset=LineItem.objects.filter(invoice=invoice) if id else LineItem.objects.none())
+        formset = LineItemFormset(queryset=LineItem.objects.filter(invoice=invoice))
 
     context = {
         "title": heading_message,
         "form": form,
         "formset": formset,
-        "invoice_id": invoice.id if invoice else None,
+        "invoice_id": invoice.invoice_number if invoice else None,
         "invoice": invoice,
     }
     return render(request, 'factures/invoice_edit.html' if id else 'factures/invoice_create.html', context)
@@ -123,7 +124,6 @@ def view_PDF(request, id=None):
             "address": "8 rue des frères caudron 78140 vélizy-villacoublay",
             "phone": "(818) XXX XXXX",
             "email": "contact@rs-telecom.fr",
-             
         },
         "invoice_id": invoice.invoice_number,
         "invoice_total": invoice.total_amount,

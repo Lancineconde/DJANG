@@ -1,5 +1,6 @@
 from django.db import models
 import datetime
+from decimal import Decimal
 
 class Invoice(models.Model):
     customer = models.CharField(max_length=255)
@@ -43,3 +44,7 @@ class LineItem(models.Model):
 
     def __str__(self):
         return f"{self.service} for {self.invoice}"
+
+    def save(self, *args, **kwargs):
+        self.amount = Decimal(self.quantity) * Decimal(self.rate)
+        super().save(*args, **kwargs)

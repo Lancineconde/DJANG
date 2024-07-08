@@ -7,6 +7,13 @@
         <div class="card white-ter">
             <div class="hero-body">
                 <form method="POST" action="">{% csrf_token %}
+                    {% if invoice_id %}
+                    <div class="columns is-centered">
+                        <div class="column is-one-third">
+                            <label>Invoice ID: {{ invoice_id }}</label>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="columns is-centered">
                         <div class="column is-one-third">
                             {{ form.customer }}
@@ -32,7 +39,7 @@
                     <div class="columns is-centered">
                         <div class="column is-one-third">
                             <label>Status</label>
-                            <select name="draft" class="input" id="draft" onchange="toggleFields(this)">
+                            <select name="draft" class="input" id="draft">
                                 <option value="1" {% if invoice.draft %}selected{% endif %}>Brouillon</option>
                                 <option value="0" {% if not invoice.draft %}selected{% endif %}>Comptabilisé</option>
                             </select>
@@ -57,7 +64,7 @@
                                 <td>{{ form.description }}</td>
                                 <td>{{ form.quantity }}</td>
                                 <td>{{ form.rate }}</td>
-                                <td class="amount"></td>
+                                <td class="amount">{{ form.amount.value }}</td>
                                 <td>
                                     <div class="input-group-append">
                                         <button class="button is-small btn btn-success add-form-row" type="button">+</button>&nbsp;
@@ -107,46 +114,27 @@
             dateFormat: "Y-m-d",
         });
 
-        toggleFields(document.getElementById('draft'));
         calc_total();
     });
 
-    function toggleFields(select) {
-        var isDraft = select.value == '1';
-        var formElements = document.querySelectorAll('input, textarea, select');
-        
-        formElements.forEach(function (element) {
-            if (element.name !== 'draft' && element.type !== 'hidden' && element.id !== 'csrfmiddlewaretoken') {
-                element.readOnly = !isDraft;
-                element.disabled = !isDraft;
-            }
-        });
-
-        // Make the status dropdown always editable
-        select.disabled = false;
-
-        // Handle add button
-        document.querySelectorAll('.add-form-row').forEach(function (button) {
-            button.disabled = !isDraft;
-        });
-    }
-
     $('table input').on("input", function () {
-        var total = [];
         var $tr = $(this).closest('tr');
-        var textValue1 = $("input.rate", $tr).val();
-        var textValue2 = $('input.quantity', $tr).val();
-        var amt = textValue1 * textValue2;
-        $('.amount', $tr).html(amt);
+        var rate = $("input[name*='-rate']", $tr).val();
+        var quantity = $('input[name*="-quantity"]', $tr).val();
+        var amount = rate * quantity;
+        $('.amount', $tr).html(amount.toFixed(2));
         calc_total();
     });
 
     function calc_total() {
         var sum = 0;
         $(".amount").each(function () {
-            sum += parseFloat($(this).text());
+            var value = parseFloat($(this).text());
+            if (!isNaN(value)) {
+                sum += value;
+            }
         });
-        $('#total').text(sum);
+        $('#total').text(sum.toFixed(2));
     }
 
     function updateElementIndex(el, prefix, ndx) {
