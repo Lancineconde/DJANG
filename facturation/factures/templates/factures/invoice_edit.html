@@ -71,6 +71,9 @@
                                         <button class="button is-small btn btn-danger remove-form-row" type="button">-</button>
                                     </div>
                                 </td>
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
                             </tr>
                             {% endfor %}
                         </tbody>
