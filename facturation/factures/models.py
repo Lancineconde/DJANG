@@ -15,7 +15,7 @@ class Invoice(models.Model):
     )
     status = models.BooleanField(default=False)  # type: ignore
     invoice_number = models.CharField(max_length=30, unique=True, blank=True)
-    draft = models.BooleanField(default=True)  # type: ignore
+    draft = models.BooleanField(default=False)  # type: ignore
 
     def __str__(self):
         return str(self.customer)
