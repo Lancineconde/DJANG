@@ -92,7 +92,6 @@ def create_or_edit_invoice(request, id=None):
                             amount=amount,
                         )
                         line_item.save()
-
             tax = total * Decimal("0.20")
             total_with_tax = total + tax
             invoice.total_amount = total_with_tax
@@ -102,8 +101,9 @@ def create_or_edit_invoice(request, id=None):
         else:
             print("Form or formset is invalid")
             print(f"Form errors: {form.errors}")
-            for i, form in enumerate(formset):
-                print(f"Formset form {i} errors: {form.errors}")
+            print(f"Formset errors: {formset.errors}")
+
+        return redirect(reverse("factures:invoice-list"))
 
     else:
         form = InvoiceForm(instance=invoice)
