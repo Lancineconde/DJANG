@@ -13,9 +13,9 @@ class Invoice(models.Model):
     total_amount = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
     )
-    status = models.BooleanField(default=False)  # type: ignore
+    status = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=30, unique=True, blank=True)
-    draft = models.BooleanField(default=False)  # type: ignore
+    draft = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.customer)
@@ -29,17 +29,13 @@ class Invoice(models.Model):
     def save(self, *args, **kwargs):
         if not self.invoice_number:
             self.invoice_number = self.generate_invoice_number()
-        try:
-            super().save(*args, **kwargs)
-            __import__("pprint").pprint("data saved successfully")
-        except Exception as e:
-            raise e
+        super().save(*args, **kwargs)
 
     def generate_invoice_number(self):
         current_year = datetime.datetime.now().year
         current_month = datetime.datetime.now().month
         count = (
-            Invoice.objects.filter(  # type: ignore
+            Invoice.objects.filter(
                 date__year=current_year, date__month=current_month
             ).count()
             + 1
@@ -56,11 +52,8 @@ class LineItem(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.service} for {self.invoice} amount {self.amount}"
+        return f"{self.service} for {self.invoice}"
 
     def save(self, *args, **kwargs):
-        self.amount = Decimal(self.quantity) * Decimal(self.rate)  # type: ignore
+        self.amount = Decimal(self.quantity) * Decimal(self.rate)
         super().save(*args, **kwargs)
-
-    def total_amount(self):
-        return self.amount
