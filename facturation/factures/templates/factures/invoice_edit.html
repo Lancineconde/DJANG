@@ -39,9 +39,9 @@
                     <div class="columns is-centered">
                         <div class="column is-one-third">
                             <label>Status</label>
-                            <select name="draft" class="input" id="draft">
-                                <option value="1" {% if invoice.draft %}selected{% endif %}>Brouillon</option>
-                                <option value="0" {% if not invoice.draft %}selected{% endif %}>Comptabilisé</option>
+                            <select name="draft" class="input" id="draft" onchange="toggleInputs()">
+                                <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
+                                <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
                             </select>
                         </div>
                     </div>
@@ -90,13 +90,12 @@
                         </div>
                     </div>
                 </form>
-                {% if not invoice.draft %}
-                <div class="columns is-centered">
-                    <div class="column is-one-third">
-                        <a href="{% url 'factures:invoice-detail' id=invoice.id %}" class="button is-small is-info">View Invoice</a>
-                    </div>
-                </div>
-                {% endif %}
+            </div>
+        </div>
+        <br>
+        <div class="card white-ter">
+            <div class="hero-body">
+                <iframe src="http://localhost:8000/factures/pdf/{{ invoice.id }}/" width="100%" height="600px"></iframe>
             </div>
         </div>
     </div>
@@ -118,7 +117,20 @@
         });
 
         calc_total();
+        toggleInputs();
     });
+
+    function toggleInputs() {
+        var draftSelector = document.getElementById('draft');
+        var isDraft = draftSelector.value === '1';
+        var inputs = document.querySelectorAll('form input, form select, form textarea, form button');
+        
+        inputs.forEach(function(input) {
+            if (input.id !== 'draft' && input.type !== 'submit') {
+                input.disabled = !isDraft;
+            }
+        });
+    }
 
     $('table input').on("input", function () {
         var $tr = $(this).closest('tr');
