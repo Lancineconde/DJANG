@@ -38,6 +38,11 @@
                     </div>
                     <div class="columns is-centered">
                         <div class="column is-one-third">
+                            {{ form.tax_percentage }}
+                        </div>
+                    </div>
+                    <div class="columns is-centered">
+                        <div class="column is-one-third">
                             <label>Status</label>
                             <select name="draft" class="input" id="draft" onchange="toggleInputs()">
                                 <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>

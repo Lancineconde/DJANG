@@ -7,14 +7,17 @@ from .models import LineItem, Invoice
 from .forms import LineItemFormset, InvoiceForm
 import pdfkit
 
-
 class InvoiceListView(View):
     def get(self, request, *args, **kwargs):
         invoices = Invoice.objects.all()
         for invoice in invoices:
-            invoice.days_remaining = (invoice.due_date - datetime.now().date()).days
+            if invoice.due_date and invoice.due_date > datetime.now().date():
+                invoice.days_remaining = (invoice.due_date - datetime.now().date()).days
+            else:
+                invoice.days_remaining = 0
             if invoice.total_amount:
-                invoice.subtotal = invoice.total_amount / Decimal("1.20")
+                tax_rate = invoice.tax_percentage / 100
+                invoice.subtotal = invoice.total_amount / (1 + tax_rate)
                 invoice.tax = invoice.total_amount - invoice.subtotal
             else:
                 invoice.subtotal = Decimal("0.00")
@@ -92,7 +95,8 @@ def create_or_edit_invoice(request, id=None):
                             amount=amount,
                         )
                         line_item.save()
-            tax = total * Decimal("0.20")
+
+            tax = total * (invoice.tax_percentage / 100)
             total_with_tax = total + tax
             invoice.total_amount = total_with_tax
             invoice.save()
@@ -101,9 +105,8 @@ def create_or_edit_invoice(request, id=None):
         else:
             print("Form or formset is invalid")
             print(f"Form errors: {form.errors}")
-            print(f"Formset errors: {formset.errors}")
-
-        return redirect(reverse("factures:invoice-list"))
+            for i, form in enumerate(formset):
+                print(f"Formset form {i} errors: {form.errors}")
 
     else:
         form = InvoiceForm(instance=invoice)
@@ -127,9 +130,14 @@ def view_PDF(request, id=None):
     invoice = get_object_or_404(Invoice, id=id)
     lineitem = invoice.lineitem_set.all()
 
-    tax_rate = Decimal("0.20")
-    subtotal = invoice.total_amount / (1 + tax_rate)
-    tax = invoice.total_amount - subtotal
+    tax_rate = invoice.tax_percentage / 100 if invoice.tax_percentage else Decimal("0.00")
+    
+    if invoice.total_amount is None:
+        subtotal = Decimal("0.00")
+        tax = Decimal("0.00")
+    else:
+        subtotal = invoice.total_amount / (1 + tax_rate)
+        tax = invoice.total_amount - subtotal
 
     context = {
         "company": {

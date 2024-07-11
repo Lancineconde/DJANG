@@ -2,7 +2,6 @@ from django import forms
 from django.forms import modelformset_factory
 from .models import LineItem, Invoice
 
-
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
@@ -14,6 +13,7 @@ class InvoiceForm(forms.ModelForm):
             "due_date",
             "message",
             "draft",
+            "tax_percentage"
         ]
         widgets = {
             "customer": forms.TextInput(
@@ -38,8 +38,10 @@ class InvoiceForm(forms.ModelForm):
                 choices=[(True, "Brouillon"), (False, "Comptabilisé")],
                 attrs={"class": "form-control"},
             ),
+            "tax_percentage": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "Tax Percentage"}
+            ),
         }
-
 
 class LineItemForm(forms.ModelForm):
     class Meta:
@@ -59,7 +61,6 @@ class LineItemForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "Rate"}
             ),
         }
-
 
 LineItemFormset = modelformset_factory(
     LineItem, form=LineItemForm, extra=1, can_delete=True
