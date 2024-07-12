@@ -1,79 +1,69 @@
 {% extends "factures/base.html" %}
 
 {% block content %}
-<br>
-<section class="hero is-fullheight">
-    <div class="container">
-        <div class="card white-ter">
-            <div class="hero-body">
-                <form method="POST" action="">{% csrf_token %}
-                    {% if invoice_id %}
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
-                            <label>Invoice ID: {{ invoice_id }}</label>
-                        </div>
+<section class="py-6">
+    <div class="container mx-auto">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <form method="POST" action="">{% csrf_token %}
+                {% if invoice_id %}
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Invoice ID: {{ invoice_id }}</label>
+                </div>
+                {% endif %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        {{ form.customer }}
                     </div>
-                    {% endif %}
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
-                            {{ form.customer }}
-                        </div>
-                        <div class="column is-one-third">
-                            {{ form.customer_email }}
-                        </div>
-                        <div class="column is-one-third">
-                            {{ form.message }}
-                        </div>
+                    <div>
+                        {{ form.customer_email }}
                     </div>
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
-                            {{ form.billing_address }}
-                        </div>
-                        <div class="column is-one-third">
-                            {{ form.date }}
-                        </div>
-                        <div class="column is-one-third">
-                            {{ form.due_date }}
-                        </div>
+                    <div>
+                        {{ form.message }}
                     </div>
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
-                            {{ form.tax_percentage }}
-                        </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        {{ form.billing_address }}
                     </div>
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
-                            <label>Status</label>
-                            <select name="draft" class="input" id="draft" onchange="toggleInputs()">
-                                <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
-                                <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
-                            </select>
-                        </div>
+                    <div>
+                        {{ form.date }}
                     </div>
-                    <table class="table is-fullwidth is-bordered is-hoverable is-striped">
+                    <div>
+                        {{ form.due_date }}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
+                    <select name="draft" class="form-input" id="draft" onchange="toggleInputs()">
+                        <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
+                        <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
                         <thead>
                             <tr>
-                                <th>Product/Service</th>
-                                <th>Description</th>
-                                <th>QTY</th>
-                                <th>RATE</th>
-                                <th>AMOUNT$</th>
-                                <th>ADD</th>
+                                <th class="py-2 px-4 border-b border-gray-200">Product/Service</th>
+                                <th class="py-2 px-4 border-b border-gray-200">Description</th>
+                                <th class="py-2 px-4 border-b border-gray-200">QTY</th>
+                                <th class="py-2 px-4 border-b border-gray-200">RATE</th>
+                                <th class="py-2 px-4 border-b border-gray-200">AMOUNT</th>
+                                <th class="py-2 px-4 border-b border-gray-200">ADD</th>
                             </tr>
                             {{ formset.management_form }}
                         </thead>
                         <tbody id="line-item-forms">
                             {% for form in formset %}
                             <tr>
-                                <td>{{ form.service }}</td>
-                                <td>{{ form.description }}</td>
-                                <td>{{ form.quantity }}</td>
-                                <td>{{ form.rate }}</td>
-                                <td class="amount">{{ form.amount.value }}</td>
-                                <td>
-                                    <div class="input-group-append">
-                                        <button class="button is-small btn btn-success add-form-row" type="button">+</button>&nbsp;
-                                        <button class="button is-small btn btn-danger remove-form-row" type="button">-</button>
+                                <td class="py-2 px-4 border-b border-gray-200">{{ form.service }}</td>
+                                <td class="py-2 px-4 border-b border-gray-200">{{ form.description }}</td>
+                                <td class="py-2 px-4 border-b border-gray-200">{{ form.quantity }}</td>
+                                <td class="py-2 px-4 border-b border-gray-200">{{ form.rate }}</td>
+                                <td class="py-2 px-4 border-b border-gray-200 amount">{{ form.amount.value }}</td>
+                                <td class="py-2 px-4 border-b border-gray-200">
+                                    <div class="flex space-x-2">
+                                        <button class="bg-green-500 text-white px-2 py-1 rounded" type="button" onclick="cloneMore('#line-item-forms tr:last', 'form')">+</button>
+                                        <button class="bg-red-500 text-white px-2 py-1 rounded" type="button" onclick="deleteForm('form', $(this))">-</button>
                                     </div>
                                 </td>
                                 {% for hidden in form.hidden_fields %}
@@ -83,25 +73,17 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <div class="row spacer">
-                        <div class="col-4 offset-2">
-                            <button type="submit" class="button btn btn-block is-info is-half">Save</button>
-                        </div>
-                    </div>
-                    <br>
-                    <div class="columns">
-                        <div class="column">
-                            <h3 class="title is-4">Total($): <span id="total"></span></h3>
-                        </div>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-xl font-bold">Total($): <span id="total" class="text-blue-600"></span></h3>
+                </div>
+            </form>
         </div>
-        <br>
-        <div class="card white-ter">
-            <div class="hero-body">
-                <iframe src="http://localhost:8000/factures/pdf/{{ invoice.id }}/" width="100%" height="600px"></iframe>
-            </div>
+        <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+            <iframe src="http://localhost:8000/factures/pdf/{{ invoice.id }}/" width="100%" height="600px"></iframe>
         </div>
     </div>
 </section>
