@@ -1,0 +1,11 @@
+services:
+  db:
+    image: mysql:latest
+    container_name: django_db
+    ports:
+      - "3306:3306"
+    # volumes:
+    #   - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: django
