@@ -36,6 +36,11 @@
                             {{ form.due_date }}
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            {{ form.tax_percentage }}
+                        </div>
+                    </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
                         <select name="draft" class="form-input" id="draft" onchange="toggleInputs()">
@@ -88,7 +93,9 @@
             </div>
             <!-- PDF Container -->
             <div class="md:w-1/2 bg-white shadow-md rounded-lg p-6">
-                <iframe src="http://localhost:8000/factures/pdf/{{ invoice.id }}/" frameborder="0" width="100%" height="600px"></iframe>
+                {% if invoice.pk %}
+                <iframe src="{% url 'factures:view-pdf' invoice.id %}" frameborder="0" width="100%" height="600px"></iframe>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -96,8 +103,15 @@
 {% endblock %}
 
 {% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function () {
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+        });
+
         flatpickr("#id_date", {
             altInput: true,
             altFormat: "F j, Y",
@@ -112,29 +126,25 @@
         calc_total();
         toggleInputs();
 
-        document.querySelectorAll('.add-form-row').forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                cloneMore('#line-item-forms tr:last', 'form');
-            });
+        $(document).on('click', '.add-form-row', function (e) {
+            e.preventDefault();
+            cloneMore('#line-item-forms tr:last', 'form');
+            return false;
         });
 
-        document.querySelectorAll('.remove-form-row').forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                deleteForm('form', button);
-            });
+        $(document).on('click', '.remove-form-row', function (e) {
+            e.preventDefault();
+            deleteForm('form', $(this));
+            return false;
         });
 
-        document.querySelectorAll('table input').forEach(function(input) {
-            input.addEventListener('input', function () {
-                var tr = input.closest('tr');
-                var rate = tr.querySelector("input[name*='-rate']").value;
-                var quantity = tr.querySelector('input[name*="-quantity"]').value;
-                var amount = rate * quantity;
-                tr.querySelector('.amount').innerHTML = amount.toFixed(2);
-                calc_total();
-            });
+        $('table input').on("input", function () {
+            var $tr = $(this).closest('tr');
+            var rate = $("input[name*='-rate']", $tr).val();
+            var quantity = $('input[name*="-quantity"]', $tr).val();
+            var amount = rate * quantity;
+            $('.amount', $tr).html(amount.toFixed(2));
+            calc_total();
         });
     });
 
@@ -170,73 +180,116 @@
     }
 
     function cloneMore(selector, prefix) {
-        var newElement = document.querySelector(selector).cloneNode(true);
-        var total = document.getElementById('id_' + prefix + '-TOTAL_FORMS').value;
-        newElement.querySelectorAll(':input:not([type=button]):not([type=submit]):not([type=reset])').forEach(function(input) {
-            var name = input.getAttribute('name');
+        var newElement = $(selector).clone(true);
+        var total = $('#id_' + prefix + '-TOTAL_FORMS').val();
+        newElement.find(':input:not([type=button]):not([type=submit]):not([type=reset])').each(function () {
+            var name = $(this).attr('name');
             if (name) {
                 name = name.replace('-' + (total - 1) + '-', '-' + total + '-');
                 var id = 'id_' + name;
-                input.setAttribute('name', name);
-                input.setAttribute('id', id);
-                input.value = '';
-                input.removeAttribute('checked');
+                $(this).attr({ 'name': name, 'id': id }).val('').removeAttr('checked');
             }
         });
-        newElement.querySelectorAll('label').forEach(function(label) {
-            var forValue = label.getAttribute('for');
+        newElement.find('label').each(function () {
+            var forValue = $(this).attr('for');
             if (forValue) {
                 forValue = forValue.replace('-' + (total - 1) + '-', '-' + total + '-');
-                label.setAttribute('for', forValue);
+                $(this).attr({ 'for': forValue });
             }
         });
         total++;
-        document.getElementById('id_' + prefix + '-TOTAL_FORMS').value = total;
-        document.querySelector(selector).after(newElement);
+        $('#id_' + prefix + '-TOTAL_FORMS').val(total);
+        $(selector).after(newElement);
         attachRowEvents(newElement);
         return false;
     }
 
     function deleteForm(prefix, btn) {
-        var total = parseInt(document.getElementById('id_' + prefix + '-TOTAL_FORMS').value);
+        var total = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
         if (total > 1) {
             btn.closest('tr').remove();
-            var forms = document.querySelectorAll('#line-item-forms tr');
-            document.getElementById('id_' + prefix + '-TOTAL_FORMS').value = forms.length;
-            forms.forEach(function(form, index) {
-                form.querySelectorAll(':input').forEach(function(input) {
-                    updateElementIndex(input, prefix, index);
+            var forms = $('#line-item-forms tr');
+            $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
+            for (var i = 0, formCount = forms.length; i < formCount; i++) {
+                $(forms.get(i)).find(':input').each(function () {
+                    updateElementIndex(this, prefix, i);
                 });
-            });
+            }
         }
         return false;
     }
 
     function attachRowEvents(row) {
-        row.querySelectorAll('.add-form-row').forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                cloneMore('#line-item-forms tr:last', 'form');
-            });
+        row.find('.add-form-row').on('click', function (e) {
+            e.preventDefault();
+            cloneMore('#line-item-forms tr:last', 'form');
+            return false;
         });
 
-        row.querySelectorAll('.remove-form-row').forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                deleteForm('form', button);
-            });
+        row.find('.remove-form-row').on('click', function (e) {
+            e.preventDefault();
+            deleteForm('form', $(this));
+            return false;
         });
 
-        row.querySelectorAll('table input').forEach(function(input) {
-            input.addEventListener('input', function () {
-                var tr = input.closest('tr');
-                var rate = tr.querySelector("input[name*='-rate']").value;
-                var quantity = tr.querySelector('input[name*="-quantity"]').value;
-                var amount = rate * quantity;
-                tr.querySelector('.amount').innerHTML = amount.toFixed(2);
-                calc_total();
-            });
+        row.find('input').on('input', function () {
+            var tr = $(this).closest('tr');
+            var rate = tr.find("input[name*='-rate']").val();
+            var quantity = tr.find('input[name*="-quantity"]').val();
+            var amount = rate * quantity;
+            tr.find('.amount').html(amount.toFixed(2));
+            calc_total();
         });
     }
 </script>
+{% endblock %}
+
+{% block custom_css %}
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+.container {
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px;
+}
+.header, .footer {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.header h1 {
+    margin: 0;
+}
+.invoice-details, .company-details, .client-details, .amount-details {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: collapse;
+}
+.invoice-details th, .invoice-details td, 
+.company-details th, .company-details td, 
+.client-details th, .client-details td, 
+.amount-details th, .amount-details td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+.invoice-details th, .company-details th, 
+.client-details th, .amount-details th {
+    background-color: #f2f2f2;
+    text-align: left;
+}
+.amount-details {
+    margin-top: 40px;
+}
+.total {
+    font-weight: bold;
+}
+.footer {
+    font-size: 12px;
+    margin-top: 20px;
+}
+</style>
 {% endblock %}

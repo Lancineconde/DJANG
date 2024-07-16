@@ -5,6 +5,53 @@
     <meta charset="utf-8">
     <title>Invoice #{{ invoice_id }}</title>
     <link rel="stylesheet" href="{% static 'css/invoice-template-1.css' %}" media="all" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header, .footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .invoice-details, .company-details, .client-details, .amount-details {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+        .invoice-details th, .invoice-details td, 
+        .company-details th, .company-details td, 
+        .client-details th, .client-details td, 
+        .amount-details th, .amount-details td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .invoice-details th, .company-details th, 
+        .client-details th, .amount-details th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        .amount-details {
+            margin-top: 40px;
+        }
+        .total {
+            font-weight: bold;
+        }
+        .footer {
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <header class="clearfix">
@@ -12,10 +59,13 @@
             <img src="{% static 'img/logo.jpg' %}" style="width: 134px; height:116px">
         </div>
         <div id="company">
-            <h1 class="name">{{ company.name }}</h1>
-            <div>{{ company.address }}</div>
-            <div>{{ company.phone }}</div>
-            <div><a href="mailto:{{ company.email }}">{{ company.email }}</a></div>
+            <h1 class="name">R & S TELECOM</h1>
+            <div>8 RUE DES FRÈRES CAUDRON</div>
+            <div>78140 - VÉLIZY-VILLACOUBLAY</div>
+            <div>SIRET : 804 963 403 000 30</div>
+            <div>contact@rs-telecom.fr</div>
+            <div>Tel : +33 9 63 57 28 32</div>
+
         </div>
     </header>
     <main>
@@ -28,17 +78,17 @@
             </div>
             <div id="invoice">
                 <h1>{{ invoice_id }}</h1>
-                <div class="date">Date of Invoice: {{ date }}</div>
-                <div class="date">Due Date: {{ due_date }}</div>
+                <div class="date">Date de la facture: {{ date }}</div>
+                <div class="date">Date d'échéance: {{ due_date }}</div>
             </div>
         </div>
-        <table border="0" cellspacing="0" cellpadding="0">
+        <table class="invoice-details">
             <thead>
                 <tr>
                     <th class="no">#</th>
                     <th class="desc">DESCRIPTION</th>
-                    <th class="unit">RATE</th>
-                    <th class="qty">QUANTITY</th>
+                    <th class="unit">PRIX UNITAIRE</th>
+                    <th class="qty">QUANTITÉ</th>
                     <th class="total">TOTAL</th>
                 </tr>
             </thead>
@@ -47,35 +97,34 @@
                 <tr>
                     <td class="no">{{ forloop.counter }}</td>
                     <td class="desc">{{ item.description }}</td>
-                    <td class="unit">${{ item.rate }}</td>
+                    <td class="unit">{{ item.rate }} €</td>
                     <td class="qty">{{ item.quantity }}</td>
-                    <td class="total">${{ item.amount }}</td>
+                    <td class="total">{{ item.amount }} €</td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr>
                     <td colspan="2"></td>
-                    <td colspan="2">SUBTOTAL</td>
-                    <td>${{ subtotal }}</td>
+                    <td colspan="2">Montant HT</td>
+                    <td>{{ subtotal }} €</td>
                 </tr>
                 <tr>
                     <td colspan="2"></td>
-                    <td colspan="2">TAX 20%</td>
-                    <td>${{ tax }}</td>
+                    <td colspan="2">TVA {{ invoice.tax_percentage }}%</td>
+                    <td>{{ tax }} €</td>
                 </tr>
                 <tr>
                     <td colspan="2"></td>
-                    <td colspan="2">TOTAL</td>
-                    <td>${{ invoice_total }}</td>
+                    <td colspan="2">Total</td>
+                    <td>{{ invoice_total }} €</td>
                 </tr>
             </tfoot>
         </table>
-        <div id="thanks"></div>
+        <div id="thanks">Merci d'utiliser la communication suivante pour votre paiement: {{ invoice_id }}</div>
         <div id="notices">
             <div>NOTICE:</div>
-            <div class="notice">Veuillez effectuer l’ordre de virement sur le compte FR76 3006 6108 7900 0201 3210 105  à l'ordre de R&S Telecom
-                Loi LME du 04-08-2008 - Intérets de retard : 3 fois le taux d'intérêt légal à compter du 31ème jour qui suit la date de facture. Indémnités pour frais de recouvrement 40€.</div>
+            <div class="notice">Veuillez effectuer l’ordre de virement sur le compte FR76 3006 6108 7900 0201 3210 105 à l'ordre de R&S Telecom. Loi LME du 04-08-2008 - Intérets de retard : 3 fois le taux d'intérêt légal à compter du 31ème jour qui suit la date de facture. Indémnités pour frais de recouvrement 40€.</div>
         </div>
     </main>
     <footer>

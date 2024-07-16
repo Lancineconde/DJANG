@@ -1,106 +1,101 @@
 {% extends "factures/base.html" %}
 
 {% block content %}
-<br>
-<section class="hero is-fullheight">
-    <div class="container">
-        <div class="card white-ter">
-            <div class="hero-body">
-                <form method="POST" action="">{% csrf_token %}
+<section class="py-6">
+    <div class="container mx-auto">
+        <div class="flex flex-col md:flex-row md:space-x-4">
+            <!-- Form Container -->
+            <div class="md:w-1/2 bg-white shadow-md rounded-lg p-6 mb-6 md:mb-0">
+                <h1 class="text-2xl font-bold mb-4">{{ title }}</h1>
+                <form method="POST" action="" id="invoice-form">
+                    {% csrf_token %}
                     {% if invoice_id %}
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
-                            <label>Invoice ID: {{ invoice_id }}</label>
-                        </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Invoice ID: {{ invoice_id }}</label>
                     </div>
                     {% endif %}
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
                             {{ form.customer }}
                         </div>
-                        <div class="column is-one-third">
+                        <div>
                             {{ form.customer_email }}
                         </div>
-                        <div class="column is-one-third">
+                        <div>
                             {{ form.message }}
                         </div>
                     </div>
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
                             {{ form.billing_address }}
                         </div>
-                        <div class="column is-one-third">
+                        <div>
                             {{ form.date }}
                         </div>
-                        <div class="column is-one-third">
+                        <div>
                             {{ form.due_date }}
                         </div>
                     </div>
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
                             {{ form.tax_percentage }}
                         </div>
                     </div>
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
-                            <label>Status</label>
-                            <select name="draft" class="input" id="draft" onchange="toggleInputs()">
-                                <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
-                                <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
-                            </select>
-                        </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
+                        <select name="draft" class="form-input" id="draft" onchange="toggleInputs()">
+                            <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
+                            <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
+                        </select>
                     </div>
-                    <table class="table is-fullwidth is-bordered is-hoverable is-striped">
-                        <thead>
-                            <tr>
-                                <th>Product/Service</th>
-                                <th>Description</th>
-                                <th>QTY</th>
-                                <th>RATE</th>
-                                <th>AMOUNT$</th>
-                                <th>ADD</th>
-                            </tr>
-                            {{ formset.management_form }}
-                        </thead>
-                        <tbody id="line-item-forms">
-                            {% for form in formset %}
-                            <tr>
-                                <td>{{ form.service }}</td>
-                                <td>{{ form.description }}</td>
-                                <td>{{ form.quantity }}</td>
-                                <td>{{ form.rate }}</td>
-                                <td class="amount">{{ form.amount.value }}</td>
-                                <td>
-                                    <div class="input-group-append">
-                                        <button class="button is-small btn btn-success add-form-row" type="button">+</button>&nbsp;
-                                        <button class="button is-small btn btn-danger remove-form-row" type="button">-</button>
-                                    </div>
-                                </td>
-                                {% for hidden in form.hidden_fields %}
-                                    {{ hidden }}
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr>
+                                    <th class="py-2 px-4 border-b border-gray-200">Product/Service</th>
+                                    <th class="py-2 px-4 border-b border-gray-200">Description</th>
+                                    <th class="py-2 px-4 border-b border-gray-200">QTY</th>
+                                    <th class="py-2 px-4 border-b border-gray-200">RATE</th>
+                                    <th class="py-2 px-4 border-b border-gray-200">AMOUNT</th>
+                                    <th class="py-2 px-4 border-b border-gray-200">ADD</th>
+                                </tr>
+                                {{ formset.management_form }}
+                            </thead>
+                            <tbody id="line-item-forms">
+                                {% for form in formset %}
+                                <tr>
+                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.service }}</td>
+                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.description }}</td>
+                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.quantity }}</td>
+                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.rate }}</td>
+                                    <td class="py-2 px-4 border-b border-gray-200 amount">{{ form.amount.value }}</td>
+                                    <td class="py-2 px-4 border-b border-gray-200">
+                                        <div class="flex space-x-2">
+                                            <button class="bg-green-500 text-white px-2 py-1 rounded add-form-row" type="button">+</button>
+                                            <button class="bg-red-500 text-white px-2 py-1 rounded remove-form-row" type="button">-</button>
+                                        </div>
+                                    </td>
+                                    {% for hidden in form.hidden_fields %}
+                                        {{ hidden }}
+                                    {% endfor %}
+                                </tr>
                                 {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <div class="row spacer">
-                        <div class="col-4 offset-2">
-                            <button type="submit" class="button btn btn-block is-info is-half">Save</button>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
-                    <br>
-                    <div class="columns">
-                        <div class="column">
-                            <h3 class="title is-4">Total($): <span id="total"></span></h3>
-                        </div>
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold">Total($): <span id="total" class="text-blue-600"></span></h3>
                     </div>
                 </form>
             </div>
-        </div>
-        <br>
-        <div class="card white-ter">
-            <div class="hero-body">
-                <iframe src="http://localhost:8000/factures/pdf/{{ invoice.id }}/" width="100%" height="600px"></iframe>
+            <!-- PDF Container -->
+            <div class="md:w-1/2 bg-white shadow-md rounded-lg p-6">
+                {% if invoice.pk %}
+                <iframe src="{% url 'factures:view-pdf' invoice.id %}" frameborder="0" width="100%" height="600px"></iframe>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -110,6 +105,12 @@
 {% block custom_js %}
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function () {
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+        });
+
         flatpickr("#id_date", {
             altInput: true,
             altFormat: "F j, Y",
@@ -123,6 +124,31 @@
 
         calc_total();
         toggleInputs();
+
+        document.querySelectorAll('.add-form-row').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                cloneMore('#line-item-forms tr:last', 'form');
+            });
+        });
+
+        document.querySelectorAll('.remove-form-row').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                deleteForm('form', button);
+            });
+        });
+
+        document.querySelectorAll('table input').forEach(function(input) {
+            input.addEventListener('input', function () {
+                var tr = input.closest('tr');
+                var rate = tr.querySelector("input[name*='-rate']").value;
+                var quantity = tr.querySelector('input[name*="-quantity"]').value;
+                var amount = rate * quantity;
+                tr.querySelector('.amount').innerHTML = amount.toFixed(2);
+                calc_total();
+            });
+        });
     });
 
     function toggleInputs() {
@@ -137,83 +163,93 @@
         });
     }
 
-    $('table input').on("input", function () {
-        var $tr = $(this).closest('tr');
-        var rate = $("input[name*='-rate']", $tr).val();
-        var quantity = $('input[name*="-quantity"]', $tr).val();
-        var amount = rate * quantity;
-        $('.amount', $tr).html(amount.toFixed(2));
-        calc_total();
-    });
-
     function calc_total() {
         var sum = 0;
-        $(".amount").each(function () {
-            var value = parseFloat($(this).text());
+        document.querySelectorAll(".amount").forEach(function(amount) {
+            var value = parseFloat(amount.textContent);
             if (!isNaN(value)) {
                 sum += value;
             }
         });
-        $('#total').text(sum.toFixed(2));
+        document.getElementById('total').textContent = sum.toFixed(2);
     }
 
     function updateElementIndex(el, prefix, ndx) {
         var id_regex = new RegExp('(' + prefix + '-\\d+)');
         var replacement = prefix + '-' + ndx;
-        if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex, replacement));
+        if (el.getAttribute("for")) el.setAttribute("for", el.getAttribute("for").replace(id_regex, replacement));
         if (el.id) el.id = el.id.replace(id_regex, replacement);
         if (el.name) el.name = el.name.replace(id_regex, replacement);
     }
 
     function cloneMore(selector, prefix) {
-        var newElement = $(selector).clone(true);
-        var total = $('#id_' + prefix + '-TOTAL_FORMS').val();
-        newElement.find(':input:not([type=button]):not([type=submit]):not([type=reset])').each(function () {
-            var name = $(this).attr('name');
+        var newElement = document.querySelector(selector).cloneNode(true);
+        var total = document.getElementById('id_' + prefix + '-TOTAL_FORMS').value;
+        newElement.querySelectorAll(':input:not([type=button]):not([type=submit]):not([type=reset])').forEach(function(input) {
+            var name = input.getAttribute('name');
             if (name) {
                 name = name.replace('-' + (total - 1) + '-', '-' + total + '-');
                 var id = 'id_' + name;
-                $(this).attr({ 'name': name, 'id': id }).val('').removeAttr('checked');
+                input.setAttribute('name', name);
+                input.setAttribute('id', id);
+                input.value = '';
+                input.removeAttribute('checked');
             }
         });
-        newElement.find('label').each(function () {
-            var forValue = $(this).attr('for');
+        newElement.querySelectorAll('label').forEach(function(label) {
+            var forValue = label.getAttribute('for');
             if (forValue) {
                 forValue = forValue.replace('-' + (total - 1) + '-', '-' + total + '-');
-                $(this).attr({ 'for': forValue });
+                label.setAttribute('for', forValue);
             }
         });
         total++;
-        $('#id_' + prefix + '-TOTAL_FORMS').val(total);
-        $(selector).after(newElement);
+        document.getElementById('id_' + prefix + '-TOTAL_FORMS').value = total;
+        document.querySelector(selector).after(newElement);
+        attachRowEvents(newElement);
         return false;
     }
 
     function deleteForm(prefix, btn) {
-        var total = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+        var total = parseInt(document.getElementById('id_' + prefix + '-TOTAL_FORMS').value);
         if (total > 1) {
             btn.closest('tr').remove();
-            var forms = $('#line-item-forms tr');
-            $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
-            for (var i = 0, formCount = forms.length; i < formCount; i++) {
-                $(forms.get(i)).find(':input').each(function () {
-                    updateElementIndex(this, prefix, i);
+            var forms = document.querySelectorAll('#line-item-forms tr');
+            document.getElementById('id_' + prefix + '-TOTAL_FORMS').value = forms.length;
+            forms.forEach(function(form, index) {
+                form.querySelectorAll(':input').forEach(function(input) {
+                    updateElementIndex(input, prefix, index);
                 });
-            }
+            });
         }
         return false;
     }
 
-    $(document).on('click', '.add-form-row', function (e) {
-        e.preventDefault();
-        cloneMore('#line-item-forms tr:last', 'form');
-        return false;
-    });
+    function attachRowEvents(row) {
+        row.querySelectorAll('.add-form-row').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                cloneMore('#line-item-forms tr:last', 'form');
+            });
+        });
 
-    $(document).on('click', '.remove-form-row', function (e) {
-        e.preventDefault();
-        deleteForm('form', $(this));
-        return false;
-    });
+        row.querySelectorAll('.remove-form-row').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                deleteForm('form', button);
+            });
+        });
+
+        row.querySelectorAll('table input').forEach(function(input) {
+            input.addEventListener('input', function () {
+                var tr = input.closest('tr');
+                var rate = tr.querySelector("input[name*='-rate']").value;
+                var quantity = tr.querySelector('input[name*="-quantity"]').value;
+                var amount = rate * quantity;
+                tr.querySelector('.amount').innerHTML = amount.toFixed(2);
+                calc_total();
+            });
+        });
+    }
 </script>
 {% endblock %}
