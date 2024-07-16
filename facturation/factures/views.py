@@ -60,57 +60,62 @@ def create_or_edit_invoice(request, id=None):
             due_date=datetime.now().date() + timedelta(days=30),
             draft=True,
         )
-        invoice.save()
         heading_message = "Create Invoice"
 
     if request.method == "POST":
         form = InvoiceForm(request.POST, instance=invoice)
-        formset = LineItemFormset(
-            request.POST, queryset=LineItem.objects.filter(invoice=invoice)
-        )
-
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid():
             invoice = form.save(commit=False)
-            if "create" in request.POST:
-                invoice.draft = False  # Mark as finalized
-            invoice.save()
+            if not invoice.pk:
+                invoice.save()  # Save the invoice to generate the primary key if not already saved
 
-            total = Decimal("0.00")
-            invoice.lineitem_set.all().delete()
-            for form in formset:
-                if form.cleaned_data and not form.cleaned_data.get("DELETE"):
-                    service = form.cleaned_data.get("service")
-                    description = form.cleaned_data.get("description")
-                    quantity = form.cleaned_data.get("quantity")
-                    rate = form.cleaned_data.get("rate")
-                    if service and description and quantity and rate:
-                        amount = Decimal(rate) * Decimal(quantity)
-                        total += amount
-                        line_item = LineItem(
-                            invoice=invoice,
-                            service=service,
-                            description=description,
-                            quantity=quantity,
-                            rate=rate,
-                            amount=amount,
-                        )
-                        line_item.save()
+            formset = LineItemFormset(request.POST, queryset=LineItem.objects.filter(invoice=invoice))
+            if formset.is_valid():
+                if "create" in request.POST:
+                    invoice.draft = False  # Mark as finalized
+                invoice.save()
 
-            tax = total * (invoice.tax_percentage / 100)
-            total_with_tax = total + tax
-            invoice.total_amount = total_with_tax
-            invoice.save()
+                total = Decimal("0.00")
+                invoice.lineitem_set.all().delete()  # Delete existing line items
+                for form in formset:
+                    if form.cleaned_data and not form.cleaned_data.get("DELETE"):
+                        service = form.cleaned_data.get("service")
+                        description = form.cleaned_data.get("description")
+                        quantity = form.cleaned_data.get("quantity")
+                        rate = form.cleaned_data.get("rate")
+                        if service and description and quantity and rate:
+                            amount = Decimal(rate) * Decimal(quantity)
+                            total += amount
+                            line_item = LineItem(
+                                invoice=invoice,
+                                service=service,
+                                description=description,
+                                quantity=quantity,
+                                rate=rate,
+                                amount=amount,
+                            )
+                            line_item.save()
 
-            return redirect(reverse("factures:invoice-list"))
+                tax = total * (invoice.tax_percentage / 100)
+                total_with_tax = total + tax
+                invoice.total_amount = total_with_tax
+                invoice.save()
+
+                return redirect(reverse("factures:invoice-list"))
+            else:
+                print("Formset is invalid")
+                for i, form in enumerate(formset):
+                    print(f"Formset form {i} errors: {form.errors}")
         else:
-            print("Form or formset is invalid")
+            print("Form is invalid")
             print(f"Form errors: {form.errors}")
-            for i, form in enumerate(formset):
-                print(f"Formset form {i} errors: {form.errors}")
 
     else:
         form = InvoiceForm(instance=invoice)
-        formset = LineItemFormset(queryset=LineItem.objects.filter(invoice=invoice))
+        if invoice.pk:
+            formset = LineItemFormset(queryset=LineItem.objects.filter(invoice=invoice))
+        else:
+            formset = LineItemFormset(queryset=LineItem.objects.none())
 
     context = {
         "title": heading_message,
@@ -131,7 +136,7 @@ def view_PDF(request, id=None):
     lineitem = invoice.lineitem_set.all()
 
     tax_rate = invoice.tax_percentage / 100 if invoice.tax_percentage else Decimal("0.00")
-    
+
     if invoice.total_amount is None:
         subtotal = Decimal("0.00")
         tax = Decimal("0.00")
@@ -163,7 +168,7 @@ def view_PDF(request, id=None):
 
 def generate_PDF(request, id):
     pdf = pdfkit.from_url(
-        request.build_absolute_uri(reverse("factures:invoice-detail", args=[id])), False
+        request.build_absolute_uri(reverse("factures:view-pdf", args=[id])), False
     )
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="invoice.pdf"'
