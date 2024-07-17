@@ -1,12 +1,76 @@
 {% extends "factures/base.html" %}
 
 {% block content %}
-<section class="py-6">
-    <div class="container mx-auto">
-        <div class="flex flex-col md:flex-row md:space-x-4">
-            <!-- Form Container -->
-            <div class="md:w-1/2 bg-white shadow-md rounded-lg p-6 mb-6 md:mb-0">
-                <h1 class="text-2xl font-bold mb-4">{{ title }}</h1>
+
+<main class="h-full relative">
+    <style>
+            .main-container {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            .main-grid {
+                display: grid;
+                gap: 6px;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                height: 100%;
+            }
+
+            @media (min-width: 1024px) {
+                .main-container {
+                    padding: 0 20px;
+                }
+            }
+
+            .card {
+                display: flex;
+                flex-direction: column;
+                background-color: white;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            .dark .card {
+                background-color: #2d3748;
+            }
+
+            .form-grid {
+                display: grid;
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+
+            .form-grid > div {
+                display: flex;
+                flex-direction: column;
+            }
+
+            table {
+                width: 100%;
+            }
+
+            .form-actions {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: 1rem;
+            }
+
+            .total-section {
+                margin-top: 1rem;
+            }
+        </style>
+        <div class="relative h-full">
+            <h4 class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300"></h4>
+            <div class="main-grid absolute inset-0 p-4">
+                <!-- Edit Section Card -->
+                <div class="card">
+                    <div>
+                        <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">EDIT SECTION</p>
                 <form method="POST" action="">
                     {% csrf_token %}
                     {% if invoice_id %}
@@ -91,15 +155,18 @@
                     </div>
                 </form>
             </div>
+    </div>
+      <div class="card flex flex-col p-2">
+<p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">PDF SECTION</p> 
+  <div class="flex-grow">
             <!-- PDF Container -->
-            <div class="md:w-1/2 bg-white shadow-md rounded-lg p-6">
                 {% if invoice.pk %}
-                <iframe src="{% url 'factures:view-pdf' invoice.id %}" frameborder="0" width="100%" height="600px"></iframe>
+                <iframe src="{% url 'factures:view-pdf' invoice.id %}" frameborder="0" wframeborder="0" class="w-full h-full"></iframe>
                 {% endif %}
             </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}
 
 {% block custom_js %}
@@ -242,54 +309,4 @@
         });
     }
 </script>
-{% endblock %}
-
-{% block custom_css %}
-<style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    color: #333;
-}
-.container {
-    width: 90%;
-    margin: 0 auto;
-    padding: 20px;
-}
-.header, .footer {
-    text-align: center;
-    margin-bottom: 20px;
-}
-.header h1 {
-    margin: 0;
-}
-.invoice-details, .company-details, .client-details, .amount-details {
-    width: 100%;
-    margin-bottom: 20px;
-    border-collapse: collapse;
-}
-.invoice-details th, .invoice-details td, 
-.company-details th, .company-details td, 
-.client-details th, .client-details td, 
-.amount-details th, .amount-details td {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-.invoice-details th, .company-details th, 
-.client-details th, .amount-details th {
-    background-color: #f2f2f2;
-    text-align: left;
-}
-.amount-details {
-    margin-top: 40px;
-}
-.total {
-    font-weight: bold;
-}
-.footer {
-    font-size: 12px;
-    margin-top: 20px;
-}
-</style>
 {% endblock %}
