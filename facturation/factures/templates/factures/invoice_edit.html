@@ -1,98 +1,153 @@
 {% extends "factures/base.html" %}
 
 {% block content %}
-<section class="py-6">
-    <div class="container mx-auto">
-        <div class="flex flex-col md:flex-row md:space-x-4">
-            <!-- Form Container -->
-            <div class="md:w-1/2 bg-white shadow-md rounded-lg p-6 mb-6 md:mb-0">
-                <h1 class="text-2xl font-bold mb-4">{{ title }}</h1>
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    {% if invoice_id %}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Invoice ID: {{ invoice_id }}</label>
+<main class="h-full relative">
+        <style>
+            .main-container {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            .main-grid {
+                display: grid;
+                gap: 6px;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                height: 100%;
+            }
+
+            @media (min-width: 1024px) {
+                .main-container {
+                    padding: 0 20px;
+                }
+            }
+
+            .card {
+                display: flex;
+                flex-direction: column;
+                background-color: white;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            .dark .card {
+                background-color: #2d3748;
+            }
+
+            .form-grid {
+                display: grid;
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+
+            .form-grid > div {
+                display: flex;
+                flex-direction: column;
+            }
+
+            table {
+                width: 100%;
+            }
+
+            .form-actions {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: 1rem;
+            }
+
+            .total-section {
+                margin-top: 1rem;
+            }
+        </style>
+        <div class="relative h-full">
+            <h4 class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300"></h4>
+            <div class="main-grid absolute inset-0 p-4">
+                <!-- Edit Section Card -->
+                <div class="card">
+                    <div>
+                        <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">EDIT SECTION</p>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            {% if invoice_id %}
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">Invoice ID: {{ invoice_id }}</label>
+                            </div>
+                            {% endif %}
+                            <div class="form-grid mb-4">
+                                <div>{{ form.customer }}</div>
+                                <div>{{ form.customer_email }}</div>
+                                <div>{{ form.message }}</div>
+                            </div>
+                            <div class="form-grid mb-4">
+                                <div>{{ form.billing_address }}</div>
+                                <div>{{ form.date }}</div>
+                                <div>{{ form.due_date }}</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
+                                <select name="draft" class="form-input" id="draft" onchange="toggleInputs()">
+                                    <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
+                                    <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full bg-white">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-2 px-4 border-b border-gray-200">Product/Service</th>
+                                            <th class="py-2 px-4 border-b border-gray-200">Description</th>
+                                            <th class="py-2 px-4 border-b border-gray-200">QTY</th>
+                                            <th class="py-2 px-4 border-b border-gray-200">RATE</th>
+                                            <th class="py-2 px-4 border-b border-gray-200">AMOUNT</th>
+                                            <th class="py-2 px-4 border-b border-gray-200">ADD</th>
+                                        </tr>
+                                        {{ formset.management_form }}
+                                    </thead>
+                                    <tbody id="line-item-forms">
+                                        {% for form in formset %}
+                                        <tr>
+                                            <td class="py-2 px-4 border-b border-gray-200">{{ form.service }}</td>
+                                            <td class="py-2 px-4 border-b border-gray-200">{{ form.description }}</td>
+                                            <td class="py-2 px-4 border-b border-gray-200">{{ form.quantity }}</td>
+                                            <td class="py-2 px-4 border-b border-gray-200">{{ form.rate }}</td>
+                                            <td class="py-2 px-4 border-b border-gray-200 amount">{{ form.amount.value }}</td>
+                                            <td class="py-2 px-4 border-b border-gray-200">
+                                                <div class="flex space-x-2">
+                                                    <button class="bg-green-500 text-white px-2 py-1 rounded add-form-row" type="button">+</button>
+                                                    <button class="bg-red-500 text-white px-2 py-1 rounded remove-form-row" type="button">-</button>
+                                                </div>
+                                            </td>
+                                            {% for hidden in form.hidden_fields %}
+                                            {{ hidden }}
+                                            {% endfor %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+                            </div>
+                            <div class="total-section">
+                                <h3 class="text-xl font-bold">Total($): <span id="total" class="text-blue-600"></span></h3>
+                            </div>
+                        </form>
                     </div>
-                    {% endif %}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                            {{ form.customer }}
-                        </div>
-                        <div>
-                            {{ form.customer_email }}
-                        </div>
-                        <div>
-                            {{ form.message }}
-                        </div>
+                </div>
+                <!-- PDF Section Card -->
+                <div class="card flex flex-col p-2">
+                    <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">PDF SECTION</p>
+                    <div class="flex-grow">
+                        <iframe src="http://localhost:8000/factures/pdf/1/" frameborder="0" class="w-full h-full"></iframe>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                            {{ form.billing_address }}
-                        </div>
-                        <div>
-                            {{ form.date }}
-                        </div>
-                        <div>
-                            {{ form.due_date }}
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
-                        <select name="draft" class="form-input" id="draft" onchange="toggleInputs()">
-                            <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
-                            <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
-                        </select>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white">
-                            <thead>
-                                <tr>
-                                    <th class="py-2 px-4 border-b border-gray-200">Product/Service</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">Description</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">QTY</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">RATE</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">AMOUNT</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">ADD</th>
-                                </tr>
-                                {{ formset.management_form }}
-                            </thead>
-                            <tbody id="line-item-forms">
-                                {% for form in formset %}
-                                <tr>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.service }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.description }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.quantity }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.rate }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200 amount">{{ form.amount.value }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">
-                                        <div class="flex space-x-2">
-                                            <button class="bg-green-500 text-white px-2 py-1 rounded add-form-row" type="button">+</button>
-                                            <button class="bg-red-500 text-white px-2 py-1 rounded remove-form-row" type="button">-</button>
-                                        </div>
-                                    </td>
-                                    {% for hidden in form.hidden_fields %}
-                                        {{ hidden }}
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-6 flex justify-end">
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
-                    </div>
-                    <div class="mt-6">
-                        <h3 class="text-xl font-bold">Total($): <span id="total" class="text-blue-600"></span></h3>
-                    </div>
-                </form>
-            </div>
-            <!-- PDF Container -->
-            <div class="md:w-1/2 bg-white shadow-md rounded-lg p-6">
-                <iframe src="http://localhost:8000/factures/pdf/{{ invoice.id }}/" frameborder="0" width="100%" height="600px"></iframe>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </main>
 {% endblock %}
 
 {% block custom_js %}
@@ -115,7 +170,7 @@
         document.querySelectorAll('.add-form-row').forEach(function(button) {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
-                cloneMore('#line-item-forms tr:last', 'form');
+                cloneMore('#line-item-forms tr:first', 'form');
             });
         });
 
@@ -169,10 +224,13 @@
         if (el.name) el.name = el.name.replace(id_regex, replacement);
     }
 
-    function cloneMore(selector, prefix) {
-        var newElement = document.querySelector(selector).cloneNode(true);
+function cloneMore(selector, prefix) {
+    var lastRow = document.querySelector('#line-item-forms tr:last-child');
+    if (lastRow) {
+        var newElement = lastRow.cloneNode(true);
         var total = document.getElementById('id_' + prefix + '-TOTAL_FORMS').value;
-        newElement.querySelectorAll(':input:not([type=button]):not([type=submit]):not([type=reset])').forEach(function(input) {
+        
+        newElement.querySelectorAll('input:not([type="button"]):not([type="submit"]):not([type="reset"])').forEach(function(input) {
             var name = input.getAttribute('name');
             if (name) {
                 name = name.replace('-' + (total - 1) + '-', '-' + total + '-');
@@ -183,6 +241,7 @@
                 input.removeAttribute('checked');
             }
         });
+        
         newElement.querySelectorAll('label').forEach(function(label) {
             var forValue = label.getAttribute('for');
             if (forValue) {
@@ -190,12 +249,15 @@
                 label.setAttribute('for', forValue);
             }
         });
+        
         total++;
         document.getElementById('id_' + prefix + '-TOTAL_FORMS').value = total;
-        document.querySelector(selector).after(newElement);
+        lastRow.after(newElement);
         attachRowEvents(newElement);
-        return false;
     }
+    
+    return false;
+}
 
     function deleteForm(prefix, btn) {
         var total = parseInt(document.getElementById('id_' + prefix + '-TOTAL_FORMS').value);
