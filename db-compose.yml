@@ -8,4 +8,4 @@ services:
     #   - ./db.sql:/docker-entrypoint-initdb.d/db.sql
     environment:
       MYSQL_ROOT_PASSWORD: pass
-      MYSQL_DATABASE: django
+      MYSQL_DATABASE: data
