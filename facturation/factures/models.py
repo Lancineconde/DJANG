@@ -2,7 +2,6 @@ from django.db import models
 import datetime
 from decimal import Decimal
 
-
 class Invoice(models.Model):
     customer = models.CharField(max_length=255, blank=True)
     customer_email = models.EmailField(null=True, blank=True)
@@ -28,13 +27,20 @@ class Invoice(models.Model):
         return self.draft
 
     def save(self, *args, **kwargs):
-        if not self.invoice_number:
+        if not self.pk or self.has_date_changed():
             self.invoice_number = self.generate_invoice_number()
         super().save(*args, **kwargs)
 
+    def has_date_changed(self):
+        if not self.pk:
+            return False
+        original = Invoice.objects.get(pk=self.pk)
+        return original.date != self.date
+
     def generate_invoice_number(self):
-        current_year = datetime.datetime.now().year
-        current_month = datetime.datetime.now().month
+        chosen_date = self.date if self.date else datetime.datetime.now().date()
+        current_year = chosen_date.year
+        current_month = chosen_date.month
         count = (
             Invoice.objects.filter(
                 date__year=current_year, date__month=current_month
