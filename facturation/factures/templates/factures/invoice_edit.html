@@ -1,177 +1,187 @@
 {% extends "factures/base.html" %}
 
 {% block content %}
-
 <main class="h-full relative">
     <style>
+        .main-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .main-grid {
+            display: grid;
+            gap: 6px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            height: 100%;
+        }
+        @media (min-width: 1024px) {
             .main-container {
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                display: flex;
-                flex-direction: column;
-                height: 100vh;
+                padding: 0 20px;
             }
-
-            .main-grid {
-                display: grid;
-                gap: 6px;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                height: 100%;
-            }
-
-            @media (min-width: 1024px) {
-                .main-container {
-                    padding: 0 20px;
-                }
-            }
-
-            .card {
-                display: flex;
-                flex-direction: column;
-                background-color: white;
-                padding: 1rem;
-                border-radius: 0.5rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            }
-
-            .dark .card {
-                background-color: #2d3748;
-            }
-
-            .form-grid {
-                display: grid;
-                gap: 1rem;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            }
-
-            .form-grid > div {
-                display: flex;
-                flex-direction: column;
-            }
-
-            table {
-                width: 100%;
-            }
-
-            .form-actions {
-                display: flex;
-                justify-content: flex-end;
-                margin-top: 1rem;
-            }
-
-            .total-section {
-                margin-top: 1rem;
-            }
-        </style>
-        <div class="relative h-full">
-            <h4 class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300"></h4>
-            <div class="main-grid absolute inset-0 p-4">
-                <!-- Edit Section Card -->
-                <div class="card">
-                    <div>
-                        <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">EDIT SECTION</p>
-                <form method="POST" action="">
-                    {% csrf_token %}
-                    {% if invoice_id %}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Invoice ID: {{ invoice_id }}</label>
-                    </div>
-                    {% endif %}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .dark .card {
+            background-color: #2d3748;
+        }
+        .form-grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+        .form-grid > div {
+            display: flex;
+            flex-direction: column;
+        }
+        table {
+            width: 100%;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        .total-section {
+            margin-top: 1rem;
+        }
+        .draft-mode {
+            background-color: #f0ad4e; /* Example color for Draft */
+            color: white;
+        }
+        .completed-mode {
+            background-color: #5cb85c; /* Example color for Completed */
+            color: white;
+        }
+    </style>
+    <div class="relative h-full">
+        <div class="main-grid absolute inset-0 p-4">
+            <!-- Edit Section Card -->
+            <div class="card">
+                <div>
+                    <div class='justify-between flex py-2'>
                         <div>
-                            {{ form.customer }}
+                            <button id="draftButton" class="form-input" onclick="toggleDraftMode()"> 
+                                {% if invoice.draft %} Draft {% else %} Completed {% endif %}
+                            </button>
                         </div>
                         <div>
-                            {{ form.customer_email }}
-                        </div>
-                        <div>
-                            {{ form.message }}
+                            <button type="button" class="rounded bg-indigo-500 px-4 py-2 text-white" onclick="downloadPDF()">
+                                Download PDF
+                            </button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                            {{ form.billing_address }}
+                    <form method="POST">
+                        {% csrf_token %}
+                        {% if invoice_id %}
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Invoice ID: {{ invoice_id }}</label>
                         </div>
-                        <div>
-                            {{ form.date }}
+                        {% endif %}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                {{ form.customer }}
+                            </div>
+                            <div>
+                                {{ form.customer_email }}
+                            </div>
+                            <div>
+                                {{ form.message }}
+                            </div>
                         </div>
-                        <div>
-                            {{ form.due_date }}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                {{ form.billing_address }}
+                            </div>
+                            <div>
+                                {{ form.date }}
+                            </div>
+                            <div>
+                                {{ form.due_date }}
+                            </div>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                            {{ form.tax_percentage }}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                {{ form.tax_percentage }}
+                            </div>
                         </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
-                        <select name="draft" class="form-input" id="draft" onchange="toggleInputs()">
-                            <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
-                            <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
-                        </select>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white">
-                            <thead>
-                                <tr>
-                                    <th class="py-2 px-4 border-b border-gray-200">Product/Service</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">Description</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">QTY</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">RATE</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">AMOUNT</th>
-                                    <th class="py-2 px-4 border-b border-gray-200">ADD</th>
-                                </tr>
+                        <div class="mt-6">
+                            <div class="flex justify-between py-2">
+                                <div class="order-last">
+                                    <button type="button" class="rounded bg-blue-500 px-4 py-2 text-white" onclick="addRow()">
+                                        Add Row
+                                    </button>
+                                </div>
+                                <div><h3 class="mb-4 text-xl font-bold">Invoice Items</h3></div>
+                            </div>
+                            <table class="mb-4 min-w-full rounded-lg border border-gray-300 bg-white">
                                 {{ formset.management_form }}
-                            </thead>
-                            <tbody id="line-item-forms">
-                                {% for form in formset %}
-                                <tr>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.service }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.description }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.quantity }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">{{ form.rate }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200 amount">{{ form.amount.value }}</td>
-                                    <td class="py-2 px-4 border-b border-gray-200">
-                                        <div class="flex space-x-2">
-                                            <button class="bg-green-500 text-white px-2 py-1 rounded add-form-row" type="button">+</button>
-                                            <button class="bg-red-500 text-white px-2 py-1 rounded remove-form-row" type="button">-</button>
-                                        </div>
-                                    </td>
-                                    {% for hidden in form.hidden_fields %}
+                                <tbody id="invoiceItems">
+                                    {% for form in formset %}
+                                    <tr>
+                                        <td class="border-b px-4 py-2">
+                                            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Product Name" {% if form.service %} value="{{ form.service.value }}" {% endif %} />
+                                        </td>
+                                        <td class="border-b px-4 py-2">
+                                            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Description" {% if form.description %} value="{{ form.description.value }}" {% endif %} />
+                                        </td>
+                                        <td class="border-b px-4 py-2">
+                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Qty" {% if form.quantity %} value="{{ form.quantity.value }}" {% endif %} />
+                                        </td>
+                                        <td class="border-b px-4 py-2">
+                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Rate" {% if form.rate %} value="{{ form.rate.value }}" {% endif %} />
+                                        </td>
+                                        <td class="border-b px-4 py-2">
+                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Amount" readonly {% if form.amount %} value="{{ form.amount.value }}" {% endif %} />
+                                        </td>
+                                        <td class="border-b px-2 py-4 text-center">
+                                            <button type="button" class="text-red-500" onclick="removeRow(this)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                        {% for hidden in form.hidden_fields %}
                                         {{ hidden }}
+                                        {% endfor %}
+                                    </tr>
                                     {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-6 flex justify-end">
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
-                    </div>
-                    <div class="mt-6">
-                        <h3 class="text-xl font-bold">Total($): <span id="total" class="text-blue-600"></span></h3>
-                    </div>
-                </form>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-6 flex items-center justify-between">
+                            <button type="submit" class="rounded bg-green-500 px-6 py-2 text-white">
+                                Save
+                            </button>
+                            <span id="invoiceSum" class="text-lg font-bold">Total: $0.00</span>
+                        </div>
+                    </form>
+                </div>
             </div>
-    </div>
-      <div class="card flex flex-col p-2">
-<p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">PDF SECTION</p> 
-  <div class="flex-grow">
-            <!-- PDF Container -->
-                {% if invoice.pk %}
-                <iframe src="{% url 'factures:view-pdf' invoice.id %}" frameborder="0" wframeborder="0" class="w-full h-full"></iframe>
-                {% endif %}
+            <div class="card flex flex-col p-2">
+                <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">PDF SECTION</p>
+                <div class="flex-grow">
+                    <!-- PDF Container -->
+                    {% if invoice.pk %}
+                    <iframe src="{% url 'factures:view-pdf' invoice.id %}" frameborder="0" class="w-full h-full"></iframe>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-</div>
+</main>
 {% endblock %}
 
 {% block custom_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script type="text/javascript">
+    let isDraft = {{ invoice.draft|yesno:"true,false" }};
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.querySelector('form');
         form.addEventListener('submit', function () {
@@ -190,123 +200,75 @@
             dateFormat: "Y-m-d",
         });
 
-        calc_total();    
-        toggleInputs();
+        calcTotal();    
+        toggleDraftMode();
 
-        $(document).on('click', '.add-form-row', function (e) {
-            e.preventDefault();
-            cloneMore('#line-item-forms tr:last', 'form');
-            return false;
-        });
-
-        $(document).on('click', '.remove-form-row', function (e) {
-            e.preventDefault();
-            deleteForm('form', $(this));
-            return false;
-        });
-
-        $('table input').on("input", function () {
+        $('#invoiceItems').on("input", "input", function () {
             var $tr = $(this).closest('tr');
-            var rate = $("input[name*='-rate']", $tr).val();
-            var quantity = $('input[name*="-quantity"]', $tr).val();
+            var rate = $tr.find("input[placeholder='Rate']").val();
+            var quantity = $tr.find("input[placeholder='Qty']").val();
             var amount = rate * quantity;
-            $('.amount', $tr).html(amount.toFixed(2));
-            calc_total();
+            $tr.find("input[placeholder='Amount']").val(amount.toFixed(2));
+            calcTotal();
+        });
+
+        document.getElementById('draftButton').addEventListener('click', function () {
+            isDraft = !isDraft;
+            this.textContent = isDraft ? 'Draft' : 'Completed';
+            toggleDraftMode();
         });
     });
 
-    function toggleInputs() {
-        var draftSelector = document.getElementById('draft');
-        var isDraft = draftSelector.value === '1';
-        var inputs = document.querySelectorAll('form input, form select, form textarea, form button');
+    function toggleDraftMode() {
+        const draftButton = document.getElementById('draftButton');
+        draftButton.className = isDraft ? 'draft-mode rounded py-2 px-2' : 'completed-mode rounded px-2 py-2';
+        const inputs = document.querySelectorAll('form input, form select, form textarea, form button');
         
         inputs.forEach(function(input) {
-            if (input.id !== 'draft' && input.type !== 'submit') {
+            if (input.id !== 'draftButton' && input.type !== 'submit') {
                 input.disabled = !isDraft;
             }
         });
     }
 
-    function calc_total() {
+    function calcTotal() {
         var sum = 0;
         document.querySelectorAll(".amount").forEach(function(amount) {
-            var value = parseFloat(amount.textContent);
+            var value = parseFloat(amount.value);
             if (!isNaN(value)) {
                 sum += value;
             }
         });
-        document.getElementById('total').textContent = sum.toFixed(2);
+        document.getElementById('invoiceSum').textContent = sum.toFixed(2);
     }
 
-    function updateElementIndex(el, prefix, ndx) {
-        var id_regex = new RegExp('(' + prefix + '-\\d+)');
-        var replacement = prefix + '-' + ndx;
-        if (el.getAttribute("for")) el.setAttribute("for", el.getAttribute("for").replace(id_regex, replacement));
-        if (el.id) el.id = el.id.replace(id_regex, replacement);
-        if (el.name) el.name = el.name.replace(id_regex, replacement);
+    function addRow() {
+        const row = `<tr>
+            <td class="px-4 py-2 border-b">
+                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Product name">
+            </td>
+            <td class="px-4 py-2 border-b">
+                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Description">
+            </td>
+            <td class="px-4 py-2 border-b">
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Qty">
+            </td>
+            <td class="px-4 py-2 border-b">
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Rate">
+            </td>
+            <td class="px-4 py-2 border-b">
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Amount" readonly>
+            </td>
+            <td class="px-4 py-2 border-b text-center">
+                <button type="button" class="text-red-500" onclick="removeRow(this)">Remove</button>
+            </td>
+        </tr>`;
+        document.getElementById('invoiceItems').insertAdjacentHTML('beforeend', row);
     }
 
-    function cloneMore(selector, prefix) {
-        var newElement = $(selector).clone(true);
-        var total = $('#id_' + prefix + '-TOTAL_FORMS').val();
-        newElement.find(':input:not([type=button]):not([type=submit]):not([type=reset])').each(function () {
-            var name = $(this).attr('name');
-            if (name) {
-                name = name.replace('-' + (total - 1) + '-', '-' + total + '-');
-                var id = 'id_' + name;
-                $(this).attr({ 'name': name, 'id': id }).val('').removeAttr('checked');
-            }
-        });
-        newElement.find('label').each(function () {
-            var forValue = $(this).attr('for');
-            if (forValue) {
-                forValue = forValue.replace('-' + (total - 1) + '-', '-' + total + '-');
-                $(this).attr({ 'for': forValue });
-            }
-        });
-        total++;
-        $('#id_' + prefix + '-TOTAL_FORMS').val(total);
-        $(selector).after(newElement);
-        attachRowEvents(newElement);
-        return false;
-    }
-
-    function deleteForm(prefix, btn) {
-        var total = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
-        if (total > 1) {
-            btn.closest('tr').remove();
-            var forms = $('#line-item-forms tr');
-            $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
-            for (var i = 0, formCount = forms.length; i < formCount; i++) {
-                $(forms.get(i)).find(':input').each(function () {
-                    updateElementIndex(this, prefix, i);
-                });
-            }
-        }
-        return false;
-    }
-
-    function attachRowEvents(row) {
-        row.find('.add-form-row').on('click', function (e) {
-            e.preventDefault();
-            cloneMore('#line-item-forms tr:last', 'form');
-            return false;
-        });
-
-        row.find('.remove-form-row').on('click', function (e) {
-            e.preventDefault();
-            deleteForm('form', $(this));
-            return false;
-        });
-
-        row.find('input').on('input', function () {
-            var tr = $(this).closest('tr');
-            var rate = tr.find("input[name*='-rate']").val();
-            var quantity = tr.find('input[name*="-quantity"]').val();
-            var amount = rate * quantity;
-            tr.find('.amount').html(amount.toFixed(2));
-            calc_total();
-        });
+    function removeRow(button) {
+        button.closest('tr').remove();
+        calcTotal();
     }
 </script>
 {% endblock %}
