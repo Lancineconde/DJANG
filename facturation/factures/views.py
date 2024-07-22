@@ -3,14 +3,43 @@ from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.http import HttpResponse
 from django.views import View
+from django.db.models import Q
+from django.core.paginator import Paginator
 from .models import LineItem, Invoice
 from .forms import LineItemFormset, InvoiceForm
 import pdfkit
 
 class InvoiceListView(View):
     def get(self, request, *args, **kwargs):
+        query = request.GET.get('q', '')
+        status_filter = request.GET.get('status', '')
+        date_filter = request.GET.get('date', '')
+        completion_filter = request.GET.get('completion', '')
+        draft_filter = request.GET.get('draft', '')
+
         invoices = Invoice.objects.all()
-        for invoice in invoices:
+
+        if query:
+            invoices = invoices.filter(Q(customer__icontains=query) | Q(invoice_number__icontains=query))
+
+        if status_filter:
+            invoices = invoices.filter(status=(status_filter == '1'))
+
+        if date_filter == 'past':
+            invoices = invoices.filter(due_date__lt=datetime.now().date())
+        elif date_filter == 'future':
+            invoices = invoices.filter(due_date__gte=datetime.now().date())
+
+        if completion_filter == 'completed':
+            invoices = invoices.filter(draft=False)
+        elif completion_filter == 'draft':
+            invoices = invoices.filter(draft=True)
+
+        paginator = Paginator(invoices, 10)  # Show 10 invoices per page
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        for invoice in page_obj:
             if invoice.due_date and invoice.due_date > datetime.now().date():
                 invoice.days_remaining = (invoice.due_date - datetime.now().date()).days
             else:
@@ -22,8 +51,14 @@ class InvoiceListView(View):
             else:
                 invoice.subtotal = Decimal("0.00")
                 invoice.tax = Decimal("0.00")
+
         context = {
-            "invoices": invoices,
+            "invoices": page_obj,
+            "query": query,
+            "status_filter": status_filter,
+            "date_filter": date_filter,
+            "completion_filter": completion_filter,
+            "draft_filter": draft_filter,
         }
         return render(request, "factures/invoice_list.html", context)
 
@@ -48,7 +83,6 @@ class InvoiceListView(View):
             invoice.save()
 
         return redirect("factures:invoice-list")
-
 
 def create_or_edit_invoice(request, id=None):
     if id:
@@ -130,7 +164,6 @@ def create_or_edit_invoice(request, id=None):
         context,
     )
 
-
 def view_PDF(request, id=None):
     invoice = get_object_or_404(Invoice, id=id)
     lineitem = invoice.lineitem_set.all()
@@ -164,7 +197,6 @@ def view_PDF(request, id=None):
         "subtotal": subtotal,
     }
     return render(request, "factures/pdf_template.html", context)
-
 
 def generate_PDF(request, id):
     pdf = pdfkit.from_url(

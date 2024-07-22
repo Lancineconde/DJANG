@@ -10,6 +10,60 @@
     </div>
 </div>
 
+<form action="{% url 'factures:invoice-list' %}" method="get" class="p-4">
+    <div class="bg-white rounded-lg shadow-md p-4">
+        <div class="flex items-center mb-4">
+            <input type="text" name="q" placeholder="Search by customer or invoice number" class="form-input w-full" value="{{ query }}">
+            
+            <div class="relative inline-block text-left ml-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 10v-2a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1zM3 18v-2a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1z" />
+                </svg>
+                <div>
+                    <button id="filterButton" type="button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500" aria-expanded="true" aria-haspopup="true">
+                        <span>Filtres</span>
+                        <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06 0L10 10.94l3.71-3.73a.75.75 0 011.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="filterDropdown" class="hidden origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="filterButton">
+            <div class="py-1" role="none">
+                <div class="px-4 py-2">
+                    <label for="status" class="block text-gray-700">Status</label>
+                    <select id="status" name="status" class="form-select w-full">
+                        <option value="">All Statuses</option>
+                        <option value="1" {% if status_filter == '1' %}selected{% endif %}>Paid</option>
+                        <option value="0" {% if status_filter == '0' %}selected{% endif %}>Not Paid</option>
+                    </select>
+                </div>
+                <div class="px-4 py-2">
+                    <label for="date" class="block text-gray-700">Date</label>
+                    <select id="date" name="date" class="form-select w-full">
+                        <option value="">All Dates</option>
+                        <option value="past" {% if date_filter == 'past' %}selected{% endif %}>Past Due</option>
+                        <option value="future" {% if date_filter == 'future' %}selected{% endif %}>Upcoming</option>
+                    </select>
+                </div>
+                <div class="px-4 py-2">
+                    <label for="completion" class="block text-gray-700">Completion Status</label>
+                    <select id="completion" name="completion" class="form-select w-full">
+                        <option value="">All Completion Status</option>
+                        <option value="completed" {% if completion_filter == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="draft" {% if completion_filter == 'draft' %}selected{% endif %}>Draft</option>
+                    </select>
+                </div>
+                <div class="px-4 py-2 flex justify-end space-x-2">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full">Apply</button>
+                    <a href="{% url 'factures:invoice-list' %}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full ml-2">Reset</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
 <form action="{% url 'factures:invoice-list' %}" method="post" class="p-4">
     {% csrf_token %}
     <div class="bg-white rounded-lg shadow-md">
@@ -51,11 +105,11 @@
                             <td class="px-4 py-2">{{ invoice.date }}</td>
                             <td class="px-4 py-2">
                                 {% if invoice.days_remaining > 0 %}
-                                    Dans {{ invoice.days_remaining }} jours
+                                    In {{ invoice.days_remaining }} days
                                 {% elif invoice.days_remaining == 0 %}
-                                    Aujourd'hui
+                                    Today
                                 {% else %}
-                                    En retard de {{ invoice.days_remaining|abs }} jours
+                                    {{ invoice.days_remaining|abs }} days overdue
                                 {% endif %}
                             </td>
                             <td class="px-4 py-2">{{ invoice.subtotal }}</td>
@@ -97,4 +151,10 @@
         </div>
     </div>
 </form>
+
+<script>
+    document.getElementById('filterButton').addEventListener('click', function () {
+        document.getElementById('filterDropdown').classList.toggle('hidden');
+    });
+</script>
 {% endblock %}
