@@ -11,11 +11,15 @@
             margin: 0;
             padding: 0;
             color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .container {
             width: 90%;
             margin: 0 auto;
             padding: 20px;
+            flex: 1;
         }
         .header, .footer {
             text-align: center;
@@ -51,30 +55,38 @@
             font-size: 12px;
             margin-top: 20px;
         }
+        #thanks, #notices {
+            width: 90%;
+            margin: 0 auto;
+            padding: 10px;
+            background: #f2f2f2;
+            border-top: 1px solid #ddd;
+            position: relative;
+        }
+        #notices {
+            margin-top: 10px;
+        }
+        footer {
+            margin-top: auto;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <header class="clearfix">
         <div id="logo">
-            <img src="{% static 'img/logo.jpg' %}" style="width: 134px; height:116px">
-        </div>
-        <div id="company">
-            <h1 class="name">R & S TELECOM</h1>
-            <div>8 RUE DES FRÈRES CAUDRON</div>
-            <div>78140 - VÉLIZY-VILLACOUBLAY</div>
-            <div>SIRET : 804 963 403 000 30</div>
-            <div>contact@rs-telecom.fr</div>
-            <div>Tel : +33 9 63 57 28 32</div>
-
+            <img src="{% static 'img/logo.jpg' %}" style="width: 50px; height:50px">
         </div>
     </header>
-    <main>
+    <main class="container">
         <div id="details" class="clearfix">
             <div id="client">
-                <div class="to">INVOICE TO:</div>
-                <h2 class="name">{{ customer }}</h2>
-                <div class="address">{{ billing_address }}</div>
-                <div class="email"><a href="mailto:{{ customer_email }}">{{ customer_email }}</a></div>
+                <h2 class="name">R & S TELECOM</h2>
+                <div>8 RUE DES FRÈRES CAUDRON</div>
+                <div>78140 - VÉLIZY-VILLACOUBLAY</div>
+                <div>SIRET : 804 963 403 000 30</div>
+                <div>contact@rs-telecom.fr</div>
+                <div>Tel : +33 9 63 57 28 32</div>
             </div>
             <div id="invoice">
                 <h1>{{ invoice_id }}</h1>
@@ -82,6 +94,7 @@
                 <div class="date">Date d'échéance: {{ due_date }}</div>
             </div>
         </div>
+
         <table class="invoice-details">
             <thead>
                 <tr>
@@ -121,11 +134,6 @@
                 </tr>
             </tfoot>
         </table>
-        <div id="thanks">Merci d'utiliser la communication suivante pour votre paiement: {{ invoice_id }}</div>
-        <div id="notices">
-            <div>NOTICE:</div>
-            <div class="notice">Veuillez effectuer l’ordre de virement sur le compte FR76 3006 6108 7900 0201 3210 105 à l'ordre de R&S Telecom. Loi LME du 04-08-2008 - Intérets de retard : 3 fois le taux d'intérêt légal à compter du 31ème jour qui suit la date de facture. Indémnités pour frais de recouvrement 40€.</div>
-        </div>
     </main>
     <footer>
         Invoice was created on a computer and is valid without the signature and seal.
