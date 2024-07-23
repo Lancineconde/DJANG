@@ -46,7 +46,7 @@ class InvoiceForm(forms.ModelForm):
 class LineItemForm(forms.ModelForm):
     class Meta:
         model = LineItem
-        fields = ["service", "description", "quantity", "rate"]
+        fields = ["service", "description", "quantity", "rate", "amount"]
         widgets = {
             "service": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Service Name"}
@@ -59,6 +59,9 @@ class LineItemForm(forms.ModelForm):
             ),
             "rate": forms.NumberInput(
                 attrs={"class": "form-control", "placeholder": "Rate"}
+            ),
+            "amount": forms.NumberInput(
+                attrs={"class": "form-control amount", "placeholder": "Amount", "readonly": "readonly"}
             ),
         }
 

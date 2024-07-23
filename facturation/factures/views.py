@@ -25,15 +25,18 @@ class InvoiceListView(View):
         if status_filter:
             invoices = invoices.filter(status=(status_filter == '1'))
 
-        if date_filter == 'past':
-            invoices = invoices.filter(due_date__lt=datetime.now().date())
-        elif date_filter == 'future':
-            invoices = invoices.filter(due_date__gte=datetime.now().date())
+        if date_filter:
+            now = datetime.now().date()
+            if date_filter == 'past':
+                invoices = invoices.filter(due_date__lt=now)
+            elif date_filter == 'future':
+                invoices = invoices.filter(due_date__gte=now)
 
-        if completion_filter == 'completed':
-            invoices = invoices.filter(draft=False)
-        elif completion_filter == 'draft':
-            invoices = invoices.filter(draft=True)
+        if completion_filter:
+            if completion_filter == 'completed':
+                invoices = invoices.filter(draft=False)
+            elif completion_filter == 'draft':
+                invoices = invoices.filter(draft=True)
 
         paginator = Paginator(invoices, 10)  # Show 10 invoices per page
         page_number = request.GET.get('page')
@@ -44,13 +47,11 @@ class InvoiceListView(View):
                 invoice.days_remaining = (invoice.due_date - datetime.now().date()).days
             else:
                 invoice.days_remaining = 0
-            if invoice.total_amount:
-                tax_rate = invoice.tax_percentage / 100
-                invoice.subtotal = invoice.total_amount / (1 + tax_rate)
-                invoice.tax = invoice.total_amount - invoice.subtotal
-            else:
-                invoice.subtotal = Decimal("0.00")
-                invoice.tax = Decimal("0.00")
+
+            tax_rate = invoice.tax_percentage / 100
+            invoice.subtotal = invoice.total_amount / (1 + tax_rate) if invoice.total_amount else Decimal("0.00")
+            invoice.tax = invoice.total_amount - invoice.subtotal if invoice.total_amount else Decimal("0.00")
+            print(f"Invoice {invoice.id}: Subtotal {invoice.subtotal}, Tax {invoice.tax}")
 
         context = {
             "invoices": page_obj,
@@ -94,62 +95,54 @@ def create_or_edit_invoice(request, id=None):
             due_date=datetime.now().date() + timedelta(days=30),
             draft=True,
         )
+        invoice.save()  # Ensure the invoice is saved before passing to the formset
         heading_message = "Create Invoice"
 
     if request.method == "POST":
         form = InvoiceForm(request.POST, instance=invoice)
-        if form.is_valid():
+        formset = LineItemFormset(request.POST, queryset=LineItem.objects.filter(invoice=invoice))
+
+        if form.is_valid() and formset.is_valid():
             invoice = form.save(commit=False)
-            if not invoice.pk:
-                invoice.save()  # Save the invoice to generate the primary key if not already saved
+            invoice.save()
 
-            formset = LineItemFormset(request.POST, queryset=LineItem.objects.filter(invoice=invoice))
-            if formset.is_valid():
-                if "create" in request.POST:
-                    invoice.draft = False  # Mark as finalized
-                invoice.save()
+            total = Decimal("0.00")
+            invoice.lineitem_set.all().delete()  # Delete existing line items
+            for form in formset:
+                if form.cleaned_data and not form.cleaned_data.get("DELETE"):
+                    service = form.cleaned_data.get("service")
+                    description = form.cleaned_data.get("description")
+                    quantity = form.cleaned_data.get("quantity")
+                    rate = form.cleaned_data.get("rate")
+                    if service and description and quantity and rate:
+                        amount = Decimal(rate) * Decimal(quantity)
+                        total += amount
+                        line_item = LineItem(
+                            invoice=invoice,
+                            service=service,
+                            description=description,
+                            quantity=quantity,
+                            rate=rate,
+                            amount=amount,
+                        )
+                        line_item.save()
 
-                total = Decimal("0.00")
-                invoice.lineitem_set.all().delete()  # Delete existing line items
-                for form in formset:
-                    if form.cleaned_data and not form.cleaned_data.get("DELETE"):
-                        service = form.cleaned_data.get("service")
-                        description = form.cleaned_data.get("description")
-                        quantity = form.cleaned_data.get("quantity")
-                        rate = form.cleaned_data.get("rate")
-                        if service and description and quantity and rate:
-                            amount = Decimal(rate) * Decimal(quantity)
-                            total += amount
-                            line_item = LineItem(
-                                invoice=invoice,
-                                service=service,
-                                description=description,
-                                quantity=quantity,
-                                rate=rate,
-                                amount=amount,
-                            )
-                            line_item.save()
+            tax = total * (invoice.tax_percentage / 100)
+            total_with_tax = total + tax
+            invoice.total_amount = total_with_tax
+            invoice.save()
+            print(f"Saved Invoice {invoice.id}: Subtotal {total}, Tax {tax}, Total {total_with_tax}")
 
-                tax = total * (invoice.tax_percentage / 100)
-                total_with_tax = total + tax
-                invoice.total_amount = total_with_tax
-                invoice.save()
-
-                return redirect(reverse("factures:invoice-list"))
-            else:
-                print("Formset is invalid")
-                for i, form in enumerate(formset):
-                    print(f"Formset form {i} errors: {form.errors}")
+            return redirect(reverse("factures:invoice-list"))
         else:
-            print("Form is invalid")
+            print("Form or formset is invalid")
             print(f"Form errors: {form.errors}")
+            for i, form in enumerate(formset):
+                print(f"Formset form {i} errors: {form.errors}")
 
     else:
         form = InvoiceForm(instance=invoice)
-        if invoice.pk:
-            formset = LineItemFormset(queryset=LineItem.objects.filter(invoice=invoice))
-        else:
-            formset = LineItemFormset(queryset=LineItem.objects.none())
+        formset = LineItemFormset(queryset=LineItem.objects.filter(invoice=invoice))
 
     context = {
         "title": heading_message,

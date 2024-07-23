@@ -27,27 +27,26 @@ class Invoice(models.Model):
         return self.draft
 
     def save(self, *args, **kwargs):
-        if not self.pk or self.has_date_changed():
+        if not self.pk:
             self.invoice_number = self.generate_invoice_number()
         super().save(*args, **kwargs)
-
-    def has_date_changed(self):
-        if not self.pk:
-            return False
-        original = Invoice.objects.get(pk=self.pk)
-        return original.date != self.date
 
     def generate_invoice_number(self):
         chosen_date = self.date if self.date else datetime.datetime.now().date()
         current_year = chosen_date.year
         current_month = chosen_date.month
-        count = (
-            Invoice.objects.filter(
-                date__year=current_year, date__month=current_month
-            ).count()
-            + 1
-        )
-        return f"FAC/{current_year}/{current_month:02d}/{count:04d}"
+
+        # Get the last invoice globally
+        last_invoice = Invoice.objects.order_by('-id').first()
+        
+        if last_invoice:
+            # Extract the last number part and increment
+            last_number = int(last_invoice.invoice_number.split('/')[-1])
+            new_number = last_number + 1
+        else:
+            new_number = 1
+
+        return f"FAC/{current_year}/{current_month:02d}/{new_number:04d}"
 
 
 class LineItem(models.Model):

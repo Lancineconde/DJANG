@@ -128,19 +128,19 @@
                                     {% for form in formset %}
                                     <tr>
                                         <td class="border-b px-4 py-2">
-                                            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Product Name" {% if form.service %} value="{{ form.service.value }}" {% endif %} />
+                                            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 p-2" name="{{ form.service.name }}" value="{{ form.service.value }}">
                                         </td>
                                         <td class="border-b px-4 py-2">
-                                            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Description" {% if form.description %} value="{{ form.description.value }}" {% endif %} />
+                                            <input type="text" class="mt-1 block w-full rounded-md border border-gray-300 p-2" name="{{ form.description.name }}" value="{{ form.description.value }}">
                                         </td>
                                         <td class="border-b px-4 py-2">
-                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Qty" {% if form.quantity %} value="{{ form.quantity.value }}" {% endif %} />
+                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" name="{{ form.quantity.name }}" value="{{ form.quantity.value }}">
                                         </td>
                                         <td class="border-b px-4 py-2">
-                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Rate" {% if form.rate %} value="{{ form.rate.value }}" {% endif %} />
+                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" name="{{ form.rate.name }}" value="{{ form.rate.value }}">
                                         </td>
                                         <td class="border-b px-4 py-2">
-                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2" placeholder="Amount" readonly {% if form.amount %} value="{{ form.amount.value }}" {% endif %} />
+                                            <input type="number" class="mt-1 block w-full rounded-md border border-gray-300 p-2 amount" name="{{ form.amount.name }}" value="{{ form.amount.value }}" readonly>
                                         </td>
                                         <td class="border-b px-2 py-4 text-center">
                                             <button type="button" class="text-red-500" onclick="removeRow(this)">
@@ -204,10 +204,10 @@
 
         $('#invoiceItems').on("input", "input", function () {
             var $tr = $(this).closest('tr');
-            var rate = $tr.find("input[placeholder='Rate']").val();
-            var quantity = $tr.find("input[placeholder='Qty']").val();
+            var rate = $tr.find("input[name*='rate']").val();
+            var quantity = $tr.find("input[name*='quantity']").val();
             var amount = rate * quantity;
-            $tr.find("input[placeholder='Amount']").val(amount.toFixed(2));
+            $tr.find("input[name*='amount']").val(amount.toFixed(2));
             calcTotal();
         });
 
@@ -256,7 +256,7 @@
                 <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Rate">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Amount" readonly>
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md amount" placeholder="Amount" readonly>
             </td>
             <td class="px-4 py-2 border-b text-center">
                 <button type="button" class="text-red-500" onclick="removeRow(this)">Remove</button>
@@ -268,6 +268,15 @@
     function removeRow(button) {
         button.closest('tr').remove();
         calcTotal();
+    }
+
+    function downloadPDF() {
+        const pdfFrame = document.querySelector('iframe');
+        const pdfUrl = pdfFrame.src;
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'invoice.pdf';
+        link.click();
     }
 </script>
 {% endblock %}
