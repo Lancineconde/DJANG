@@ -2,6 +2,7 @@ from django import forms
 from django.forms import modelformset_factory
 from .models import LineItem, Invoice
 
+
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
@@ -13,7 +14,7 @@ class InvoiceForm(forms.ModelForm):
             "due_date",
             "message",
             "draft",
-            "tax_percentage"
+            "tax_percentage",
         ]
         widgets = {
             "customer": forms.TextInput(
@@ -34,20 +35,18 @@ class InvoiceForm(forms.ModelForm):
             "message": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Message"}
             ),
-            "draft": forms.Select(
-                choices=[(True, "Brouillon"), (False, "Comptabilisé")],
-                attrs={"class": "form-control"},
-            ),
+            "draft": forms.HiddenInput(),
             "tax_percentage": forms.NumberInput(
                 attrs={"class": "form-control", "placeholder": "Tax Percentage"}
             ),
         }
 
     def clean_tax_percentage(self):
-        tax_percentage = self.cleaned_data.get('tax_percentage')
+        tax_percentage = self.cleaned_data.get("tax_percentage")
         if tax_percentage < 0 or tax_percentage > 100:
             raise forms.ValidationError("Tax percentage must be between 0 and 100")
         return tax_percentage
+
 
 class LineItemForm(forms.ModelForm):
     class Meta:
@@ -67,9 +66,14 @@ class LineItemForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "Rate"}
             ),
             "amount": forms.NumberInput(
-                attrs={"class": "form-control amount", "placeholder": "Amount", "readonly": "readonly"}
+                attrs={
+                    "class": "form-control amount",
+                    "placeholder": "Amount",
+                    "readonly": "readonly",
+                }
             ),
         }
+
 
 LineItemFormset = modelformset_factory(
     LineItem, form=LineItemForm, extra=1, can_delete=True

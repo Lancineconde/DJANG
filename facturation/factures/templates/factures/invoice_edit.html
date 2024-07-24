@@ -69,7 +69,7 @@
                 <div>
                     <div class='justify-between flex py-2'>
                         <div>
-                            <button id="draftButton" class="form-input" onclick="toggleDraftMode()"> 
+                            <button id="draftButton" class="form-input"> 
                                 {% if invoice.draft %} Draft {% else %} Completed {% endif %}
                             </button>
                         </div>
@@ -111,6 +111,9 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 {{ form.tax_percentage }}
+                            </div>
+                            <div>
+                                <input id="draftHidden" type="hidden" name="draft" value="{{ form.draft.value|default_if_none:False }}">
                             </div>
                         </div>
                         <div class="mt-6">
@@ -215,12 +218,14 @@
 
         document.getElementById('draftButton').addEventListener('click', function () {
             isDraft = !isDraft;
+            document.getElementById('draftHidden').value = isDraft;
             this.textContent = isDraft ? 'Draft' : 'Completed';
             toggleDraftMode();
         });
     });
 
     function toggleDraftMode() {
+        document.getElementById('draftHidden').value = isDraft;
         const draftButton = document.getElementById('draftButton');
         draftButton.className = isDraft ? 'draft-mode rounded py-2 px-2' : 'completed-mode rounded px-2 py-2';
         const inputs = document.querySelectorAll('form input, form select, form textarea, form button');
@@ -230,6 +235,7 @@
                 input.disabled = !isDraft;
             }
         });
+
     }
 
     function calcTotal() {
@@ -240,7 +246,7 @@
                 sum += value;
             }
         });
-        document.getElementById('invoiceSum').textContent = sum.toFixed(2);
+        document.getElementById('invoiceSum').textContent = 'Total: $' + sum.toFixed(2);
     }
 
     function addRow() {
