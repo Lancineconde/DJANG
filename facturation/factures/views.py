@@ -7,14 +7,50 @@ from .models import LineItem, Invoice
 from .forms import LineItemFormset, InvoiceForm
 import pdfkit
 
+from django.db.models import Q
+from django.core.paginator import Paginator
+
 class InvoiceListView(View):
     def get(self, request, *args, **kwargs):
+        query = request.GET.get("q", "")
+        status_filter = request.GET.get("status", "")
+        date_filter = request.GET.get("date", "")
+        completion_filter = request.GET.get("completion", "")
+        page = request.GET.get("page", 1)
+
         invoices = Invoice.objects.all()
+
+        if query:
+            invoices = invoices.filter(
+                Q(customer__icontains=query) |
+                Q(invoice_number__icontains=query)
+            )
+
+        if status_filter:
+            invoices = invoices.filter(status=status_filter == "1")
+
+        if date_filter:
+            today = datetime.now().date()
+            if date_filter == "past":
+                invoices = invoices.filter(due_date__lt=today)
+            elif date_filter == "future":
+                invoices = invoices.filter(due_date__gt=today)
+
+        if completion_filter:
+            if completion_filter == "completed":
+                invoices = invoices.filter(draft=False)
+            elif completion_filter == "draft":
+                invoices = invoices.filter(draft=True)
+
         for invoice in invoices:
-            if invoice.due_date and invoice.due_date > datetime.now().date():
-                invoice.days_remaining = (invoice.due_date - datetime.now().date()).days
-            else:
-                invoice.days_remaining = 0
+            if invoice.due_date:
+                if invoice.due_date > datetime.now().date():
+                    invoice.days_remaining = (invoice.due_date - datetime.now().date()).days
+                elif invoice.due_date == datetime.now().date():
+                    invoice.days_remaining = 0
+                else:
+                    invoice.days_remaining = -1  # Indicate past due
+
             if invoice.total_amount:
                 tax_rate = invoice.tax_percentage / 100
                 invoice.subtotal = invoice.total_amount / (1 + tax_rate)
@@ -22,8 +58,13 @@ class InvoiceListView(View):
             else:
                 invoice.subtotal = Decimal("0.00")
                 invoice.tax = Decimal("0.00")
+
         context = {
             "invoices": invoices,
+            "query": query,
+            "status_filter": status_filter,
+            "date_filter": date_filter,
+            "completion_filter": completion_filter,
         }
         return render(request, "factures/invoice_list.html", context)
 
@@ -40,15 +81,7 @@ class InvoiceListView(View):
             else:
                 invoices.update(status=True)
 
-        if "draft" in request.POST:
-            invoice_id = request.POST.get("invoice_id")
-            invoice = get_object_or_404(Invoice, id=invoice_id)
-            draft_status = bool(int(request.POST["draft"]))
-            invoice.draft = draft_status
-            invoice.save()
-
         return redirect("factures:invoice-list")
-
 
 def create_or_edit_invoice(request, id=None):
     if id:
@@ -66,13 +99,6 @@ def create_or_edit_invoice(request, id=None):
         form = InvoiceForm(request.POST, instance=invoice)
         if form.is_valid():
             invoice = form.save(commit=False)
-            # Regenerate invoice number if date is changed
-            original_date = invoice.date
-            new_date = form.cleaned_data['date']
-            if original_date != new_date:
-                invoice.date = new_date
-                invoice.invoice_number = invoice.generate_invoice_number()
-            
             if not invoice.pk:
                 invoice.save()  # Save the invoice to generate the primary key if not already saved
 
@@ -107,6 +133,8 @@ def create_or_edit_invoice(request, id=None):
                 invoice.total_amount = total_with_tax
                 invoice.save()
 
+                # Debugging info
+                print(f"Invoice {invoice.pk} saved successfully.")
                 return redirect(reverse("factures:invoice-list"))
             else:
                 print("Formset is invalid")
@@ -135,7 +163,6 @@ def create_or_edit_invoice(request, id=None):
         "factures/invoice_edit.html" if id else "factures/invoice_create.html",
         context,
     )
-
 
 def view_PDF(request, id=None):
     invoice = get_object_or_404(Invoice, id=id)
@@ -170,7 +197,6 @@ def view_PDF(request, id=None):
         "subtotal": subtotal,
     }
     return render(request, "factures/pdf_template.html", context)
-
 
 def generate_PDF(request, id):
     pdf = pdfkit.from_url(

@@ -1,6 +1,6 @@
+from django.db import models
 import datetime
 from decimal import Decimal
-from django.db import models
 
 class Invoice(models.Model):
     customer = models.CharField(max_length=255, blank=True)
@@ -32,13 +32,17 @@ class Invoice(models.Model):
         super().save(*args, **kwargs)
 
     def generate_invoice_number(self):
-        current_year = datetime.datetime.now().year
-        current_month = datetime.datetime.now().month
-        count = (
-            Invoice.objects.filter(date__year=current_year).count() + 1
-        )
-        return f"FAC/{current_year}/{current_month:02d}/{count:04d}"
+        if self.date:
+            invoice_year = self.date.year
+            invoice_month = self.date.month
+        else:
+            current_date = datetime.datetime.now()
+            invoice_year = current_date.year
+            invoice_month = current_date.month
 
+        # Counting all invoices created within the same year
+        count = Invoice.objects.filter(date__year=invoice_year).count() + 1
+        return f"FAC/{invoice_year}/{invoice_month:02d}/{count:04d}"
 
 class LineItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
