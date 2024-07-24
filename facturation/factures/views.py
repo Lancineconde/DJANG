@@ -64,9 +64,15 @@ def create_or_edit_invoice(request, id=None):
 
     if request.method == "POST":
         form = InvoiceForm(request.POST, instance=invoice)
-
         if form.is_valid():
             invoice = form.save(commit=False)
+            # Regenerate invoice number if date is changed
+            original_date = invoice.date
+            new_date = form.cleaned_data['date']
+            if original_date != new_date:
+                invoice.date = new_date
+                invoice.invoice_number = invoice.generate_invoice_number()
+            
             if not invoice.pk:
                 invoice.save()  # Save the invoice to generate the primary key if not already saved
 
@@ -101,8 +107,6 @@ def create_or_edit_invoice(request, id=None):
                 invoice.total_amount = total_with_tax
                 invoice.save()
 
-                # Debugging info
-                print(f"Invoice {invoice.pk} saved successfully.")
                 return redirect(reverse("factures:invoice-list"))
             else:
                 print("Formset is invalid")

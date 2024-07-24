@@ -1,7 +1,6 @@
-from django.db import models
 import datetime
 from decimal import Decimal
-
+from django.db import models
 
 class Invoice(models.Model):
     customer = models.CharField(max_length=255, blank=True)
@@ -28,25 +27,15 @@ class Invoice(models.Model):
         return self.draft
 
     def save(self, *args, **kwargs):
-        if not self.pk or self.has_date_changed():
+        if not self.invoice_number:
             self.invoice_number = self.generate_invoice_number()
         super().save(*args, **kwargs)
 
-    def has_date_changed(self):
-        if not self.pk:
-            return False
-        original = Invoice.objects.get(pk=self.pk)
-        return original.date != self.date
-
     def generate_invoice_number(self):
-        chosen_date = self.date if self.date else datetime.datetime.now().date()
-        current_year = chosen_date.year
-        current_month = chosen_date.month
+        current_year = datetime.datetime.now().year
+        current_month = datetime.datetime.now().month
         count = (
-            Invoice.objects.filter(
-                date__year=current_year, date__month=current_month
-            ).count()
-            + 1
+            Invoice.objects.filter(date__year=current_year).count() + 1
         )
         return f"FAC/{current_year}/{current_month:02d}/{count:04d}"
 
