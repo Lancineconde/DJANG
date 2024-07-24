@@ -43,6 +43,12 @@ class InvoiceForm(forms.ModelForm):
             ),
         }
 
+    def clean_tax_percentage(self):
+        tax_percentage = self.cleaned_data.get('tax_percentage')
+        if tax_percentage < 0 or tax_percentage > 100:
+            raise forms.ValidationError("Tax percentage must be between 0 and 100")
+        return tax_percentage
+
 class LineItemForm(forms.ModelForm):
     class Meta:
         model = LineItem

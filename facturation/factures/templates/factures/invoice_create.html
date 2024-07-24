@@ -132,83 +132,90 @@
         });
     }
 
-    $('table input').on("input", function () {
-        var $tr = $(this).closest('tr');
-        var rate = $("input[name*='-rate']", $tr).val();
-        var quantity = $('input[name*="-quantity"]', $tr).val();
-        var amount = rate * quantity;
-        $('.amount', $tr).html(amount.toFixed(2));
-        calc_total();
+    document.querySelectorAll('table input').forEach(function(element) {
+        element.addEventListener('input', function () {
+            var row = this.closest('tr');
+            var rate = parseFloat(row.querySelector("input[name$='-rate']").value) || 0;
+            var quantity = parseFloat(row.querySelector("input[name$='-quantity']").value) || 0;
+            var amount = rate * quantity;
+            row.querySelector('.amount').textContent = amount.toFixed(2);
+            calc_total();
+        });
     });
 
     function calc_total() {
         var sum = 0;
-        $(".amount").each(function () {
-            var value = parseFloat($(this).text());
+        document.querySelectorAll(".amount").forEach(function(element) {
+            var value = parseFloat(element.textContent);
             if (!isNaN(value)) {
                 sum += value;
             }
         });
-        $('#total').text(sum.toFixed(2));
+        document.getElementById('total').textContent = sum.toFixed(2);
     }
 
     function updateElementIndex(el, prefix, ndx) {
         var id_regex = new RegExp('(' + prefix + '-\\d+)');
         var replacement = prefix + '-' + ndx;
-        if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex, replacement));
+        if (el.getAttribute("for")) el.setAttribute("for", el.getAttribute("for").replace(id_regex, replacement));
         if (el.id) el.id = el.id.replace(id_regex, replacement);
         if (el.name) el.name = el.name.replace(id_regex, replacement);
     }
 
     function cloneMore(selector, prefix) {
-        var newElement = $(selector).clone(true);
-        var total = $('#id_' + prefix + '-TOTAL_FORMS').val();
-        newElement.find(':input:not([type=button]):not([type=submit]):not([type=reset])').each(function () {
-            var name = $(this).attr('name');
+        var newElement = document.querySelector(selector).cloneNode(true);
+        var total = document.getElementById('id_' + prefix + '-TOTAL_FORMS').value;
+        newElement.querySelectorAll(':input:not([type=button]):not([type=submit]):not([type=reset])').forEach(function(element) {
+            var name = element.getAttribute('name');
             if (name) {
                 name = name.replace('-' + (total - 1) + '-', '-' + total + '-');
                 var id = 'id_' + name;
-                $(this).attr({ 'name': name, 'id': id }).val('').removeAttr('checked');
+                element.setAttribute({ 'name': name, 'id': id }).value = '';
+                element.removeAttribute('checked');
             }
         });
-        newElement.find('label').each(function () {
-            var forValue = $(this).attr('for');
+        newElement.querySelectorAll('label').forEach(function(element) {
+            var forValue = element.getAttribute('for');
             if (forValue) {
                 forValue = forValue.replace('-' + (total - 1) + '-', '-' + total + '-');
-                $(this).attr({ 'for': forValue });
+                element.setAttribute('for', forValue);
             }
         });
         total++;
-        $('#id_' + prefix + '-TOTAL_FORMS').val(total);
-        $(selector).after(newElement);
+        document.getElementById('id_' + prefix + '-TOTAL_FORMS').value = total;
+        document.querySelector(selector).after(newElement);
         return false;
     }
 
     function deleteForm(prefix, btn) {
-        var total = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+        var total = parseInt(document.getElementById('id_' + prefix + '-TOTAL_FORMS').value);
         if (total > 1) {
             btn.closest('tr').remove();
-            var forms = $('#line-item-forms tr');
-            $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
-            for (var i = 0, formCount = forms.length; i < formCount; i++) {
-                $(forms.get(i)).find(':input').each(function () {
-                    updateElementIndex(this, prefix, i);
+            var forms = document.querySelectorAll('#line-item-forms tr');
+            document.getElementById('id_' + prefix + '-TOTAL_FORMS').value = forms.length;
+            forms.forEach(function(form, index) {
+                form.querySelectorAll(':input').forEach(function(input) {
+                    updateElementIndex(input, prefix, index);
                 });
-            }
+            });
         }
         return false;
     }
 
-    $(document).on('click', '.add-form-row', function (e) {
-        e.preventDefault();
-        cloneMore('#line-item-forms tr:last', 'form');
-        return false;
+    document.querySelectorAll('.add-form-row').forEach(function(button) {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            cloneMore('#line-item-forms tr:last', 'form');
+            return false;
+        });
     });
 
-    $(document).on('click', '.remove-form-row', function (e) {
-        e.preventDefault();
-        deleteForm('form', $(this));
-        return false;
+    document.querySelectorAll('.remove-form-row').forEach(function(button) {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            deleteForm('form', this);
+            return false;
+        });
     });
 </script>
 {% endblock %}

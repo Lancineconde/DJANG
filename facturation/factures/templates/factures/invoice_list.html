@@ -152,6 +152,53 @@
     </div>
 </form>
 
+<!-- Pagination Controls -->
+<div class="mt-4">
+    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+        {% if invoices.has_previous %}
+        <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if completion_filter %}&completion={{ completion_filter }}{% endif %}{% if draft_filter %}&draft={{ draft_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <span class="sr-only">First</span>
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 12l-4-4h8l-4 4z" clip-rule="evenodd" />
+            </svg>
+        </a>
+        <a href="?page={{ invoices.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if completion_filter %}&completion={{ completion_filter }}{% endif %}{% if draft_filter %}&draft={{ draft_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <span class="sr-only">Previous</span>
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 12l-4-4h8l-4 4z" clip-rule="evenodd" />
+            </svg>
+        </a>
+        {% endif %}
+
+        {% for i in invoices.paginator.page_range %}
+        {% if invoices.number == i %}
+        <span class="relative z-10 inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-50 text-sm font-medium text-gray-600">
+            {{ i }}
+        </span>
+        {% else %}
+        <a href="?page={{ i }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if completion_filter %}&completion={{ completion_filter }}{% endif %}{% if draft_filter %}&draft={{ draft_filter }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            {{ i }}
+        </a>
+        {% endif %}
+        {% endfor %}
+
+        {% if invoices.has_next %}
+        <a href="?page={{ invoices.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if completion_filter %}&completion={{ completion_filter }}{% endif %}{% if draft_filter %}&draft={{ draft_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <span class="sr-only">Next</span>
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 8l4 4H6l4-4z" clip-rule="evenodd" />
+            </svg>
+        </a>
+        <a href="?page={{ invoices.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if completion_filter %}&completion={{ completion_filter }}{% endif %}{% if draft_filter %}&draft={{ draft_filter }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <span class="sr-only">Last</span>
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 8l4 4H6l4-4z" clip-rule="evenodd" />
+            </svg>
+        </a>
+        {% endif %}
+    </nav>
+</div>
+
 <script>
     document.getElementById('filterButton').addEventListener('click', function () {
         document.getElementById('filterDropdown').classList.toggle('hidden');

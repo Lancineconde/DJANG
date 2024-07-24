@@ -202,13 +202,15 @@
         calcTotal();    
         toggleDraftMode();
 
-        $('#invoiceItems').on("input", "input", function () {
-            var $tr = $(this).closest('tr');
-            var rate = $tr.find("input[name*='rate']").val();
-            var quantity = $tr.find("input[name*='quantity']").val();
-            var amount = rate * quantity;
-            $tr.find("input[name*='amount']").val(amount.toFixed(2));
-            calcTotal();
+        document.getElementById('invoiceItems').addEventListener('input', function (e) {
+            if (e.target && e.target.matches('input')) {
+                var row = e.target.closest('tr');
+                var rate = parseFloat(row.querySelector("input[name*='rate']").value) || 0;
+                var quantity = parseFloat(row.querySelector("input[name*='quantity']").value) || 0;
+                var amount = rate * quantity;
+                row.querySelector("input[name*='amount']").value = amount.toFixed(2);
+                calcTotal();
+            }
         });
 
         document.getElementById('draftButton').addEventListener('click', function () {
@@ -232,8 +234,8 @@
 
     function calcTotal() {
         var sum = 0;
-        document.querySelectorAll(".amount").forEach(function(amount) {
-            var value = parseFloat(amount.value);
+        document.querySelectorAll(".amount").forEach(function(element) {
+            var value = parseFloat(element.value);
             if (!isNaN(value)) {
                 sum += value;
             }
@@ -244,30 +246,45 @@
     function addRow() {
         const row = `<tr>
             <td class="px-4 py-2 border-b">
-                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Product name">
+                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-service" placeholder="Product name">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Description">
+                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-description" placeholder="Description">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Qty">
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-quantity" placeholder="Qty">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" placeholder="Rate">
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-rate" placeholder="Rate">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md amount" placeholder="Amount" readonly>
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md amount" name="form-__prefix__-amount" placeholder="Amount" readonly>
             </td>
             <td class="px-4 py-2 border-b text-center">
                 <button type="button" class="text-red-500" onclick="removeRow(this)">Remove</button>
             </td>
-        </tr>`;
+        </tr>`.replace(/__prefix__/g, document.querySelectorAll('#invoiceItems tr').length);
         document.getElementById('invoiceItems').insertAdjacentHTML('beforeend', row);
+        attachRowEvents();
     }
 
     function removeRow(button) {
         button.closest('tr').remove();
         calcTotal();
+    }
+
+    function attachRowEvents() {
+        document.querySelectorAll('#invoiceItems tr').forEach(function(row) {
+            row.querySelectorAll('input').forEach(function(input) {
+                input.addEventListener('input', function () {
+                    var rate = parseFloat(row.querySelector("input[name*='rate']").value) || 0;
+                    var quantity = parseFloat(row.querySelector("input[name*='quantity']").value) || 0;
+                    var amount = rate * quantity;
+                    row.querySelector("input[name*='amount']").value = amount.toFixed(2);
+                    calcTotal();
+                });
+            });
+        });
     }
 
     function downloadPDF() {
