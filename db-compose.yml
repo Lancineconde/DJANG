@@ -8,5 +8,5 @@ services:
     # volumes:
     #   - ./db.sql:/docker-entrypoint-initdb.d/db.sql
     environment:
-      MYSQL_ROOT_PASSWORD: pass
-      MYSQL_DATABASE: django
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_DATABASE: data
