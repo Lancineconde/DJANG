@@ -2,96 +2,55 @@
 {% load static %}
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoice #{{ invoice_id }}</title>
     <link rel="stylesheet" href="{% static 'css/invoice-template-1.css' %}" media="all" />
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .container {
-            width: 90%;
-            margin: 0 auto;
-            padding: 20px;
-            flex: 1;
-        }
-        .header, .footer {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            margin: 0;
-        }
-        .invoice-details, .company-details, .client-details, .amount-details {
-            width: 100%;
-            margin-bottom: 20px;
-            border-collapse: collapse;
-        }
-        .invoice-details th, .invoice-details td, 
-        .company-details th, .company-details td, 
-        .client-details th, .client-details td, 
-        .amount-details th, .amount-details td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        .invoice-details th, .company-details th, 
-        .client-details th, .amount-details th {
-            background-color: #f2f2f2;
-            text-align: left;
-        }
-        .amount-details {
-            margin-top: 40px;
-        }
-        .total {
-            font-weight: bold;
-        }
-        .footer {
-            font-size: 12px;
-            margin-top: 20px;
-        }
-        #thanks, #notices {
-            width: 90%;
-            margin: 0 auto;
-            padding: 10px;
-            background: #f2f2f2;
-            border-top: 1px solid #ddd;
-            position: relative;
-        }
-        #notices {
-            margin-top: 10px;
-        }
-        footer {
-            margin-top: auto;
-            text-align: center;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 </head>
-<body>
-    <header class="clearfix">
-        <div id="logo">
-            <img src="{% static 'img/logo.jpg' %}" style="width: 50px; height:50px">
-        </div>
-    </header>
-    <main class="container">
-        <div id="details" class="clearfix">
-            <div id="client">
-                <h2 class="name">R & S TELECOM</h2>
-                <div>8 RUE DES FRÈRES CAUDRON</div>
-                <div>78140 - VÉLIZY-VILLACOUBLAY</div>
-                <div>SIRET : 804 963 403 000 30</div>
-                <div>contact@rs-telecom.fr</div>
-                <div>Tel : +33 9 63 57 28 32</div>
+
+
+<body class="bg-gray-100 p-8">
+    <div class="mx-auto max-w-4xl rounded-lg bg-white p-8 shadow-lg">
+
+        <div class="mt-8 items-center justify-between">  
+            <div>
+                <img src="http://localhost:8000/static/img/logo.jpg" alt="Company Logo" class="mb-1 h-16" />
+                <div class="border-t border-gray-900"></div>
+                <address class="mt-1 text-gray-600">
+                  R & S Telecom<br />
+                  8 Rue Des Freres Caudron<br />
+                  78140 - Velizy-Villacoublay<br />
+                  Sitret: 804-963-403-000-30 <br />
+                  Contact@rs-telecom.fr <br />
+                  Tel: +33 963 57 28 32 <br />
+                </address>
             </div>
-            <div id="invoice">
-                <h1>{{ invoice_id }}</h1>
-                <div class="date">Date de la facture: {{ date }}</div>
-                <div class="date">Date d'échéance: {{ due_date }}</div>
+        </div>
+
+        <div class="flex justify-between">
+            <div></div>
+            <address class="mr-28 text-gray-600">
+            {{ customer }}<br />
+            {{ billing_address }}<br />
+            {{ customer_email }}<br />
+            </address>
+        </div>
+        <h1 class="mt-8 text-2xl font-bold"> {{ invoice_id }}</h1>
+        <br>
+
+        <div class="flex justify-between">
+            <div>
+              <label>Date de la facture</label>
+              <br>
+              <b>{{ date }}</b>
+              <br>
+            </div>
+
+            <div>
+              <label>Date d'échéance</label>
+              <br>
+              <b>{{ due_date }}</b>
+              <br>
             </div>
         </div>
 
@@ -134,9 +93,14 @@
                 </tr>
             </tfoot>
         </table>
-    </main>
-    <footer>
-        Invoice was created on a computer and is valid without the signature and seal.
-    </footer>
-</body>
+
+        <div class="mt-8">
+            <div class="border-t border-gray-300"></div>
+            <div class="mt-2 text-center text-sm text-gray-600">
+              Contact Information: info@company.com | (123) 456-7890<br />
+              This document is generated electronically and does not require a signature.
+            </div>
+        </div>
+    </div>
+  </body>
 </html>
