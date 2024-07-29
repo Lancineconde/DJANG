@@ -5,10 +5,11 @@ from django.http import HttpResponse
 from django.views import View
 from .models import LineItem, Invoice
 from .forms import LineItemFormset, InvoiceForm
-import pdfkit
+import pdfkit  # type: ignore
 
 from django.db.models import Q
 from django.core.paginator import Paginator
+
 
 class InvoiceListView(View):
     def get(self, request, *args, **kwargs):
@@ -22,8 +23,7 @@ class InvoiceListView(View):
 
         if query:
             invoices = invoices.filter(
-                Q(customer__icontains=query) |
-                Q(invoice_number__icontains=query)
+                Q(customer__icontains=query) | Q(invoice_number__icontains=query)
             )
 
         if status_filter:
@@ -42,14 +42,10 @@ class InvoiceListView(View):
             elif completion_filter == "draft":
                 invoices = invoices.filter(draft=True)
 
+        today = datetime.now().date()
         for invoice in invoices:
             if invoice.due_date:
-                if invoice.due_date > datetime.now().date():
-                    invoice.days_remaining = (invoice.due_date - datetime.now().date()).days
-                elif invoice.due_date == datetime.now().date():
-                    invoice.days_remaining = 0
-                else:
-                    invoice.days_remaining = -1  # Indicate past due
+                invoice.days_remaining = (invoice.due_date - today).days
 
             if invoice.total_amount:
                 tax_rate = invoice.tax_percentage / 100
@@ -82,6 +78,7 @@ class InvoiceListView(View):
                 invoices.update(status=True)
 
         return redirect("factures:invoice-list")
+
 
 def create_or_edit_invoice(request, id=None):
     if id:
@@ -199,9 +196,9 @@ def view_PDF(request, id=None):
     return render(request, "factures/pdf_template.html", context)
 
 def generate_PDF(request, id):
-    pdf = pdfkit.from_url(
-        request.build_absolute_uri(reverse("factures:view-pdf", args=[id])), False
-    )
+    invoice = get_object_or_404(Invoice, id=id)
+    pdf = pdfkit.from_url(request.build_absolute_uri(reverse("factures:view-pdf", args=[id])), False)
+    filename = f'{invoice.invoice_number}.pdf'
     response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="invoice.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response

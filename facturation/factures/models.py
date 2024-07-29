@@ -1,3 +1,4 @@
+# models.py
 from django.db import models
 import datetime
 from decimal import Decimal
@@ -16,6 +17,7 @@ class Invoice(models.Model):
     invoice_number = models.CharField(max_length=30, unique=True, blank=True)
     draft = models.BooleanField(default=True)
     tax_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=20.00, blank=True)
+    unique_id = models.PositiveIntegerField(editable=False, null=True, blank=True)  # Add this field to store the unique part
 
     def __str__(self):
         return str(self.customer)
@@ -27,11 +29,18 @@ class Invoice(models.Model):
         return self.draft
 
     def save(self, *args, **kwargs):
-        if not self.invoice_number:
-            self.invoice_number = self.generate_invoice_number()
+        if not self.invoice_number or self._state.adding:
+            self.generate_invoice_number()
+        else:
+            # Check if the date has changed
+            if self.pk is not None:
+                orig = Invoice.objects.get(pk=self.pk)
+                if orig.date != self.date:
+                    self.generate_invoice_number(update_unique_id=False)
+
         super().save(*args, **kwargs)
 
-    def generate_invoice_number(self):
+    def generate_invoice_number(self, update_unique_id=True):
         if self.date:
             invoice_year = self.date.year
             invoice_month = self.date.month
@@ -40,9 +49,11 @@ class Invoice(models.Model):
             invoice_year = current_date.year
             invoice_month = current_date.month
 
-        # Counting all invoices created within the same year
-        count = Invoice.objects.filter(date__year=invoice_year).count() + 1
-        return f"FAC/{invoice_year}/{invoice_month:02d}/{count:04d}"
+        if update_unique_id or not self.unique_id:
+            last_invoice = Invoice.objects.filter(date__year=invoice_year).order_by('-unique_id').first()
+            self.unique_id = (last_invoice.unique_id if last_invoice else 0) + 1
+
+        self.invoice_number = f"FAC/{invoice_year}/{invoice_month:02d}/{self.unique_id:04d}"
 
 class LineItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)

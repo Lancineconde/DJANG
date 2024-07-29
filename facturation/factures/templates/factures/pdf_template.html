@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invoice #{{ invoice_id }}</title>
+    <title>Facture {{ invoice_id }}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   </head>
 
@@ -90,17 +90,20 @@
         </div>
       </div>
 
-      <div>
-        <h4>
-          Merci d'utilise to communication suiviate pour votre paiement: {{ invoice_id }}
-        </h4>
+      <div class="mt-4">
+        <h4 class="font-bold">Veuillez utiliser la référence suivante pour votre paiement : <b>{{ invoice_id }}</b></h4>
+      </div>
+
+      <div class="mt-4">
+        <p class="text-sm text-gray-600"><b>Conditions de règlement :</b> Règlement immédiat</p>
+        <p class="text-sm text-gray-600 mt-2"><b>Veuillez effectuer l’ordre de virement sur le compte FR76 3006 6108 7900 0201 3210 105 à l'ordre de R&S Telecom</b></p>
+        <p class="text-sm text-gray-600 mt-2"><b>Loi LME du 04-08-2008 - Intérets de retard : 3 fois le taux d'intérêt légal à compter du 31ème jour qui suit la date de facture. Indémnités pour frais de recouvrement 40€</b></p>
       </div>
 
       <div class="mt-8">
         <div class="border-t border-gray-300"></div>
         <div class="mt-2 text-center text-sm text-gray-600">
           Contact Information: info@company.com | (123) 456-7890<br />
-          This document is generated electronically and does not require a signature.
         </div>
       </div>
     </div>

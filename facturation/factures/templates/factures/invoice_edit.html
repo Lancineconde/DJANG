@@ -54,36 +54,36 @@
             margin-top: 1rem.
         }
         .draft-mode {
-            background-color: #f0ad4e; /* Example color for Draft */
+            background-color: #f0ad4e; /* Exemple de couleur pour Brouillon */
             color: white.
         }
         .completed-mode {
-            background-color: #5cb85c; /* Example color for Completed */
+            background-color: #5cb85c; /* Exemple de couleur pour Terminé */
             color: white.
         }
     </style>
     <div class="relative h-full">
         <div class="main-grid absolute inset-0 p-4">
-            <!-- Edit Section Card -->
+            <!-- Carte de section de modification -->
             <div class="card">
                 <div>
                     <div class='justify-between flex py-2'>
                         <div>
-                            <button id="draftButton" class="form-input"> 
-                                {% if invoice.draft %} Draft {% else %} Completed {% endif %}
+                            <button id="draftButton" class="form-input" type="button" onclick="toggleDraftStatus()"> 
+                                {% if invoice.draft %} Brouillon {% else %} Terminé {% endif %}
                             </button>
                         </div>
                         <div>
                             <button type="button" class="rounded bg-indigo-500 px-4 py-2 text-white" onclick="downloadPDF()">
-                                Download PDF
+                                Télécharger le PDF
                             </button>
                         </div>
                     </div>
-                    <form method="POST">
+                    <form method="POST" id="invoiceForm">
                         {% csrf_token %}
                         {% if invoice_id %}
                         <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Invoice ID: {{ invoice_id }}</label>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">ID de la facture: {{ invoice_id }}</label>
                         </div>
                         {% endif %}
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -120,10 +120,10 @@
                             <div class="flex justify-between py-2">
                                 <div class="order-last">
                                     <button type="button" class="rounded bg-blue-500 px-4 py-2 text-white" onclick="addRow()">
-                                        Add Row
+                                        Ajouter une ligne
                                     </button>
                                 </div>
-                                <div><h3 class="mb-4 text-xl font-bold">Invoice Items</h3></div>
+                                <div><h3 class="mb-4 text-xl font-bold">Articles de la facture</h3></div>
                             </div>
                             <table class="mb-4 min-w-full rounded-lg border border-gray-300 bg-white">
                                 {{ formset.management_form }}
@@ -146,8 +146,8 @@
                                             {{ form.amount }}
                                         </td>
                                         <td class="border-b px-2 py-4 text-center">
-                                            <button type="button" class="text-red-500" onclick="removeRow(this)">
-                                                Remove
+                                            <button type="button" class="text-red-500 remove-form-row" onclick="removeRow(this)">
+                                                Supprimer
                                             </button>
                                         </td>
                                         {% for hidden in form.hidden_fields %}
@@ -160,7 +160,7 @@
                         </div>
                         <div class="mt-6 flex items-center justify-between">
                             <button type="submit" class="rounded bg-green-500 px-6 py-2 text-white">
-                                Save
+                                Enregistrer
                             </button>
                             <span id="invoiceSum" class="text-lg font-bold">Total: $0.00</span>
                         </div>
@@ -169,7 +169,7 @@
             </div>
             <div class="card flex flex-col p-2">
                 <div class="flex-grow">
-                    <!-- PDF Container -->
+                    <!-- Conteneur PDF -->
                     {% if invoice.pk %}
                     <iframe src="{% url 'factures:view-pdf' invoice.id %}" frameborder="0" class="w-full h-full"></iframe>
                     {% endif %}
@@ -193,12 +193,19 @@
 
         flatpickr("#id_date", {
             altInput: true,
-            altFormat: "F j, Y",
+            altFormat: "j F, Y",
             dateFormat: "Y-m-d",
+            onChange: function(selectedDates, dateStr, instance) {
+                // Calculate new due date
+                const dueDateField = document.getElementById('id_due_date');
+                const newDate = new Date(dateStr);
+                newDate.setDate(newDate.getDate() + 30);
+                dueDateField._flatpickr.setDate(newDate);
+            }
         });
         flatpickr("#id_due_date", {
             altInput: true,
-            altFormat: "F j, Y",
+            altFormat: "j F, Y",
             dateFormat: "Y-m-d",
         });
 
@@ -219,7 +226,7 @@
         document.getElementById('draftButton').addEventListener('click', function () {
             isDraft = !isDraft;
             document.getElementById('draftHidden').value = isDraft;
-            this.textContent = isDraft ? 'Draft' : 'Completed';
+            this.textContent = isDraft ? 'Brouillon' : 'Terminé';
             toggleDraftMode();
         });
     });
@@ -252,22 +259,22 @@
     function addRow() {
         const row = `<tr>
             <td class="px-4 py-2 border-b">
-                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-service" placeholder="Product name">
+                <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-service" placeholder="Nom du produit">
             </td>
             <td class="px-4 py-2 border-b">
                 <input type="text" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-description" placeholder="Description">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-quantity" placeholder="Qty">
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-quantity" placeholder="Qté">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-rate" placeholder="Rate">
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md" name="form-__prefix__-rate" placeholder="Taux">
             </td>
             <td class="px-4 py-2 border-b">
-                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md amount" name="form-__prefix__-amount" placeholder="Amount" readonly>
+                <input type="number" class="p-2 block w-full border border-gray-300 rounded-md amount" name="form-__prefix__-amount" placeholder="Montant" readonly>
             </td>
             <td class="px-4 py-2 border-b text-center">
-                <button type="button" class="text-red-500" onclick="removeRow(this)">Remove</button>
+                <button type="button" class="text-red-500 remove-form-row" onclick="removeRow(this)">Supprimer</button>
             </td>
         </tr>`.replace(/__prefix__/g, document.querySelectorAll('#invoiceItems tr').length);
         document.getElementById('invoiceItems').insertAdjacentHTML('beforeend', row);

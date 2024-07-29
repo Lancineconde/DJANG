@@ -10,7 +10,7 @@
                     {% if invoice_id %}
                     <div class="columns is-centered">
                         <div class="column is-one-third">
-                            <label>Invoice ID: {{ invoice_id }}</label>
+                            <label>ID de la facture: {{ invoice_id }}</label>
                         </div>
                     </div>
                     {% endif %}
@@ -43,22 +43,22 @@
                     </div>
                     <div class="columns is-centered">
                         <div class="column is-one-third">
-                            <label>Status</label>
+                            <label>Statut</label>
                             <select name="draft" class="input" id="draft" onchange="toggleInputs()">
-                                <option value="1" {% if invoice.draft %}selected{% endif %}>Draft</option>
-                                <option value="0" {% if not invoice.draft %}selected{% endif %}>Completed</option>
+                                <option value="1" {% if invoice.draft %}selected{% endif %}>Brouillon</option>
+                                <option value="0" {% if not invoice.draft %}selected{% endif %}>Terminé</option>
                             </select>
                         </div>
                     </div>
                     <table class="table is-fullwidth is-bordered is-hoverable is-striped">
                         <thead>
                             <tr>
-                                <th>Product/Service</th>
+                                <th>Produit/Service</th>
                                 <th>Description</th>
-                                <th>QTY</th>
-                                <th>RATE</th>
-                                <th>AMOUNT$</th>
-                                <th>ADD</th>
+                                <th>Qté</th>
+                                <th>Taux</th>
+                                <th>Montant</th>
+                                <th>Ajouter</th>
                             </tr>
                             {{ formset.management_form }}
                         </thead>
@@ -85,7 +85,7 @@
                     </table>
                     <div class="row spacer">
                         <div class="col-4 offset-2">
-                            <button type="submit" class="button btn btn-block is-info is-half">Save</button>
+                            <button type="submit" class="button btn btn-block is-info is-half">Enregistrer</button>
                         </div>
                     </div>
                     <br>
@@ -107,12 +107,19 @@
     document.addEventListener('DOMContentLoaded', function () {
         flatpickr("#id_date", {
             altInput: true,
-            altFormat: "F j, Y",
+            altFormat: "j F, Y",
             dateFormat: "Y-m-d",
+            onChange: function(selectedDates, dateStr, instance) {
+                // Calculate new due date
+                const dueDateField = document.getElementById('id_due_date');
+                const newDate = new Date(dateStr);
+                newDate.setDate(newDate.getDate() + 30);
+                dueDateField._flatpickr.setDate(newDate);
+            }
         });
         flatpickr("#id_due_date", {
             altInput: true,
-            altFormat: "F j, Y",
+            altFormat: "j F, Y",
             dateFormat: "Y-m-d",
         });
 
